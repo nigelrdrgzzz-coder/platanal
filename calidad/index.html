@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calidad — Platanal</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <nav>
+    <a href="../maestros/index.html" class="logo">🍌 Platanal</a>
+    <a href="../maestros/index.html">Maestros</a>
+    <a href="../recepcion/index.html">Recepción</a>
+    <a href="index.html" class="active">Calidad</a>
+    <span style="margin-left:auto;color:rgba(255,255,255,0.7);font-size:13px">Nigel — Gerente</span>
+  </nav>
+
+  <div id="loading"><div class="spinner"></div></div>
+
+  <div class="container">
+    <div class="page-header"><h1>Control de Calidad</h1></div>
+    <div id="alert"></div>
+
+    <div class="card">
+      <h2 style="margin-bottom:4px">Pendientes de inspección</h2>
+      <p style="color:var(--gris-texto);font-size:13px;margin-bottom:16px">Albaranes confirmados que aún no tienen inspección registrada</p>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Nº Albarán</th><th>Fecha</th><th>Finca</th><th>Cosechero</th><th>Kg Total</th><th></th></tr></thead>
+          <tbody id="tbody_pendientes"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-bottom:4px">Inspecciones realizadas</h2>
+      <p style="color:var(--gris-texto);font-size:13px;margin-bottom:16px">Historial de inspecciones de calidad</p>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Albarán</th><th>Fecha</th><th>Finca</th><th>1ª kg</th><th>2ª kg</th><th>Desecho kg</th><th>Rendimiento</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="tbody_inspeccionados"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/supabase.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script>
+    async function init() {
+      showLoading(true);
+      const { data: alb } = await sb.from('albaranes_entrada')
+        .select('*, fincas(nombre), cosecheros(nombre)')
+        .eq('estado', 'confirmado')
+        .order('created_at', { ascending: false });
+
+      const { data: insp } = await sb.from('inspecciones')
+        .select('*, albaranes_entrada(numero, fincas(nombre))')
+        .order('created_at', { ascending: false });
+
+      showLoading(false);
+
+      const pendientes = alb || [];
+      document.getElementById('tbody_pendientes').innerHTML = pendientes.length
+        ? pendientes.map(a => `
+          <tr>
+            <td><strong>${a.numero}</strong></td>
+            <td>${formatDate(a.fecha)}</td>
+            <td>${a.fincas?.nombre || '—'}</td>
+            <td>${a.cosecheros?.nombre || '—'}</td>
+            <td>${(a.kg_total||0).toLocaleString('es-ES')} kg</td>
+            <td><a href="inspeccion.html?id=${a.id}" class="btn btn-sm btn-primary">Inspeccionar</a></td>
+          </tr>`).join('')
+        : '<tr><td colspan="6" style="text-align:center;padding:30px;color:#6c757d">Sin pendientes ✓</td></tr>';
+
+      const hechas = insp || [];
+      document.getElementById('tbody_inspeccionados').innerHTML = hechas.length
+        ? hechas.map(i => `
+          <tr>
+            <td><strong>${i.albaranes_entrada?.numero || '—'}</strong></td>
+            <td>${formatDate(i.fecha)}</td>
+            <td>${i.albaranes_entrada?.fincas?.nombre || '—'}</td>
+            <td>${(i.kg_primera||0).toLocaleString('es-ES')}</td>
+            <td>${(i.kg_segunda||0).toLocaleString('es-ES')}</td>
+            <td>${(i.kg_desecho||0).toLocaleString('es-ES')}</td>
+            <td><strong>${i.rendimiento_pct ? i.rendimiento_pct.toFixed(1)+'%' : '—'}</strong></td>
+            <td>${badgeEstado(i.estado)}</td>
+            <td>${i.estado === 'pendiente' ? `<button class="btn btn-sm btn-primary" onclick="aprobar('${i.id}')">Aprobar</button>` : '✓'}</td>
+          </tr>`).join('')
+        : '<tr><td colspan="9" style="text-align:center;padding:30px;color:#6c757d">Sin inspecciones registradas</td></tr>';
+    }
+
+    async function aprobar(id) {
+      showLoading(true);
+      const { data: insp } = await sb.from('inspecciones').select('*, albaranes_entrada(id)').eq('id', id).single();
+      const kgTotal = (insp.kg_primera||0) + (insp.kg_segunda||0) + (insp.kg_tercera||0) + (insp.kg_desecho||0) + (insp.kg_dedos||0);
+      await sb.from('inspecciones').update({ estado: 'aprobada' }).eq('id', id);
+      await sb.from('albaranes_entrada').update({ estado: 'inspeccionado' }).eq('id', insp.albaran_id);
+      const codigo = 'LOTE-' + Date.now();
+      await sb.from('lotes').insert({ codigo, albaran_id: insp.albaran_id, inspeccion_id: id, kg_actuales: kgTotal, fecha_entrada: new Date().toISOString(), estado: 'en_stock' });
+      showLoading(false);
+      showAlert('Inspección aprobada — lote creado en stock');
+      setTimeout(() => init(), 1000);
+    }
+
+    init();
+  </script>
+</body>
+</html>

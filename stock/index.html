@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock — Platanal</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .alerta-row { background:#FFF3E0 !important; }
+    .alerta-row td { color:#E65100; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="../maestros/index.html" class="logo">🍌 Platanal</a>
+    <a href="../maestros/index.html">Maestros</a>
+    <a href="../recepcion/index.html">Recepción</a>
+    <a href="../calidad/index.html">Calidad</a>
+    <a href="../valorizacion/index.html">Valorización</a>
+    <a href="index.html" class="active">Stock</a>
+    <a href="../despacho/index.html">Despacho</a>
+    <a href="../dashboard/index.html">Dashboard</a>
+    <span style="margin-left:auto;color:rgba(255,255,255,0.7);font-size:13px">Nigel — Gerente</span>
+  </nav>
+  <div id="loading"><div class="spinner"></div></div>
+  <div class="container">
+    <div class="page-header"><h1>Stock en Almacén</h1></div>
+    <div id="alert"></div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
+      <div class="card" style="padding:16px;margin:0"><div style="font-size:11px;text-transform:uppercase;color:var(--gris-texto);font-weight:600">Lotes activos</div><div id="kpi_lotes" style="font-size:24px;font-weight:700;color:var(--verde);margin-top:4px">—</div></div>
+      <div class="card" style="padding:16px;margin:0"><div style="font-size:11px;text-transform:uppercase;color:var(--gris-texto);font-weight:600">Kg en cámara</div><div id="kpi_kg" style="font-size:24px;font-weight:700;color:var(--verde);margin-top:4px">—</div></div>
+      <div class="card" style="padding:16px;margin:0;border-left:4px solid var(--naranja)"><div style="font-size:11px;text-transform:uppercase;color:var(--gris-texto);font-weight:600">Alertas antigüedad</div><div id="kpi_alertas" style="font-size:24px;font-weight:700;color:var(--naranja);margin-top:4px">—</div></div>
+    </div>
+
+    <div class="card">
+      <div class="search-bar">
+        <input id="search" placeholder="Buscar lote o finca..." oninput="filtrar()">
+        <select id="filtro_camara" onchange="filtrar()"><option value="">Todas las cámaras</option></select>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Código Lote</th><th>Finca</th><th>Entrada</th><th>Días</th><th>Kg actuales</th><th>Cámara</th><th>Estado</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/supabase.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script>
+    let lotes = [], umbral = 7;
+
+    async function init() {
+      showLoading(true);
+      const [{ data: l }, { data: config }, { data: camaras }] = await Promise.all([
+        sb.from('lotes').select('*, albaranes_entrada(numero, fincas(nombre)), camaras(nombre)').eq('estado','en_stock').order('fecha_entrada'),
+        sb.from('config').select('*'),
+        sb.from('camaras').select('*')
+      ]);
+      lotes = l || [];
+      umbral = parseInt(config?.find(c => c.clave==='dias_alerta_camara')?.valor || '7');
+      showLoading(false);
+
+      const sel = document.getElementById('filtro_camara');
+      (camaras||[]).forEach(c => sel.innerHTML += `<option value="${c.id}">${c.nombre}</option>`);
+
+      const alertas = lotes.filter(l => diasEnCamara(l.fecha_entrada) >= umbral);
+      document.getElementById('kpi_lotes').textContent = lotes.length;
+      document.getElementById('kpi_kg').textContent = lotes.reduce((s,l) => s+(l.kg_actuales||0),0).toLocaleString('es-ES') + ' kg';
+      document.getElementById('kpi_alertas').textContent = alertas.length;
+      renderTabla(lotes);
+    }
+
+    function diasEnCamara(fecha) {
+      return Math.floor((new Date() - new Date(fecha)) / 86400000);
+    }
+
+    function renderTabla(rows) {
+      document.getElementById('tbody').innerHTML = rows.length
+        ? rows.map(l => {
+            const dias = diasEnCamara(l.fecha_entrada);
+            const alerta = dias >= umbral;
+            return `<tr class="${alerta?'alerta-row':''}">
+              <td><strong>${l.codigo}</strong></td>
+              <td>${l.albaranes_entrada?.fincas?.nombre||'—'}</td>
+              <td>${formatDate(l.fecha_entrada)}</td>
+              <td><strong>${dias}</strong> ${alerta?'⚠️':''}</td>
+              <td>${(l.kg_actuales||0).toLocaleString('es-ES')} kg</td>
+              <td>${l.camaras?.nombre||'—'}</td>
+              <td>${badgeEstado(l.estado)}</td>
+            </tr>`;
+          }).join('')
+        : '<tr><td colspan="7" style="text-align:center;padding:40px;color:#6c757d">Sin lotes en stock</td></tr>';
+    }
+
+    function filtrar() {
+      const q = document.getElementById('search').value.toLowerCase();
+      const cam = document.getElementById('filtro_camara').value;
+      renderTabla(lotes.filter(l => {
+        const txt = `${l.codigo} ${l.albaranes_entrada?.fincas?.nombre||''}`.toLowerCase();
+        return (!q || txt.includes(q)) && (!cam || l.camara_id === cam);
+      }));
+    }
+
+    init();
+  </script>
+</body>
+</html>

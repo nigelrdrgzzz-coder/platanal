@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inspección — Platanal</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <nav>
+    <a href="../maestros/index.html" class="logo">🍌 Platanal</a>
+    <a href="../maestros/index.html">Maestros</a>
+    <a href="../recepcion/index.html">Recepción</a>
+    <a href="index.html" class="active">Calidad</a>
+    <span style="margin-left:auto;color:rgba(255,255,255,0.7);font-size:13px">Nigel — Gerente</span>
+  </nav>
+  <div id="loading"><div class="spinner"></div></div>
+  <div class="container">
+    <div class="page-header">
+      <h1>Registrar Inspección</h1>
+      <a href="index.html" class="btn btn-secondary">← Volver</a>
+    </div>
+    <div id="alert"></div>
+    <div id="info_albaran" class="card" style="background:var(--verde);color:white;margin-bottom:20px"></div>
+    <div class="card">
+      <h2 style="margin-bottom:16px">Resultado por calidades (kg)</h2>
+      <div class="form-row">
+        <div class="form-group"><label>Primera (kg)</label><input type="number" id="kg_primera" min="0" placeholder="0" oninput="calcRendimiento()"></div>
+        <div class="form-group"><label>Segunda (kg)</label><input type="number" id="kg_segunda" min="0" placeholder="0" oninput="calcRendimiento()"></div>
+        <div class="form-group"><label>Tercera (kg)</label><input type="number" id="kg_tercera" min="0" placeholder="0" oninput="calcRendimiento()"></div>
+        <div class="form-group"><label>Desecho (kg)</label><input type="number" id="kg_desecho" min="0" placeholder="0" oninput="calcRendimiento()"></div>
+        <div class="form-group"><label>Dedos (kg)</label><input type="number" id="kg_dedos" min="0" placeholder="0" oninput="calcRendimiento()"></div>
+      </div>
+      <div style="background:var(--gris-claro);border-radius:var(--radius);padding:16px;margin-bottom:16px">
+        <strong>Rendimiento calculado: </strong><span id="rendimiento" style="font-size:18px;color:var(--verde);font-weight:700">—</span>
+      </div>
+      <h2 style="margin-bottom:12px">Defectos detectados</h2>
+      <div class="form-row">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:400"><input type="checkbox" id="d_mancha"> Mancha</label>
+        <label style="display:flex;align-items:center;gap:8px;font-weight:400"><input type="checkbox" id="d_calibre"> Calibre fuera</label>
+        <label style="display:flex;align-items:center;gap:8px;font-weight:400"><input type="checkbox" id="d_madurez"> Madurez</label>
+        <label style="display:flex;align-items:center;gap:8px;font-weight:400"><input type="checkbox" id="d_golpe"> Golpes</label>
+        <label style="display:flex;align-items:center;gap:8px;font-weight:400"><input type="checkbox" id="d_otros"> Otros</label>
+      </div>
+      <div class="form-group" style="margin-top:16px">
+        <label>Observaciones</label>
+        <textarea id="observaciones" placeholder="Notas adicionales..."></textarea>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" onclick="guardar()">Guardar Inspección</button>
+    </div>
+  </div>
+  <script src="../assets/js/supabase.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const albaranId = params.get('id');
+    let albaran = null;
+
+    async function init() {
+      if (!albaranId) { window.location.href = 'index.html'; return; }
+      showLoading(true);
+      const { data } = await sb.from('albaranes_entrada').select('*, fincas(nombre), cosecheros(nombre)').eq('id', albaranId).single();
+      showLoading(false);
+      albaran = data;
+      document.getElementById('info_albaran').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+          <div><div style="font-size:11px;opacity:0.7">ALBARÁN</div><div style="font-size:16px;font-weight:700">${data.numero}</div></div>
+          <div><div style="font-size:11px;opacity:0.7">FINCA</div><div style="font-size:16px;font-weight:700">${data.fincas?.nombre||'—'}</div></div>
+          <div><div style="font-size:11px;opacity:0.7">COSECHERO</div><div style="font-size:16px;font-weight:700">${data.cosecheros?.nombre||'—'}</div></div>
+          <div><div style="font-size:11px;opacity:0.7">KG ENTRADA</div><div style="font-size:16px;font-weight:700">${(data.kg_total||0).toLocaleString('es-ES')} kg</div></div>
+          <div><div style="font-size:11px;opacity:0.7">RACIMOS</div><div style="font-size:16px;font-weight:700">${data.racimos||'—'}</div></div>
+        </div>`;
+    }
+
+    function calcRendimiento() {
+      const total = ['kg_primera','kg_segunda','kg_tercera','kg_desecho','kg_dedos'].reduce((s,id) => s + (parseFloat(document.getElementById(id).value)||0), 0);
+      const buena = (parseFloat(document.getElementById('kg_primera').value)||0) + (parseFloat(document.getElementById('kg_segunda').value)||0);
+      const pct = total > 0 ? ((buena/total)*100).toFixed(1) : 0;
+      document.getElementById('rendimiento').textContent = pct + '%';
+    }
+
+    async function guardar() {
+      const kg_primera = parseFloat(document.getElementById('kg_primera').value)||0;
+      const kg_segunda = parseFloat(document.getElementById('kg_segunda').value)||0;
+      const kg_tercera = parseFloat(document.getElementById('kg_tercera').value)||0;
+      const kg_desecho = parseFloat(document.getElementById('kg_desecho').value)||0;
+      const kg_dedos = parseFloat(document.getElementById('kg_dedos').value)||0;
+      const total = kg_primera + kg_segunda + kg_tercera + kg_desecho + kg_dedos;
+      const rendimiento_pct = total > 0 ? ((kg_primera+kg_segunda)/total)*100 : 0;
+      const defectos = { mancha: document.getElementById('d_mancha').checked, calibre: document.getElementById('d_calibre').checked, madurez: document.getElementById('d_madurez').checked, golpe: document.getElementById('d_golpe').checked, otros: document.getElementById('d_otros').checked };
+      showLoading(true);
+      const { error } = await sb.from('inspecciones').insert({ albaran_id: albaranId, kg_primera, kg_segunda, kg_tercera, kg_desecho, kg_dedos, defectos, rendimiento_pct, estado: 'pendiente' });
+      showLoading(false);
+      if (error) { showAlert('Error: ' + error.message, 'error'); return; }
+      showAlert('Inspección guardada — pendiente de aprobación');
+      setTimeout(() => window.location.href = 'index.html', 1500);
+    }
+
+    init();
+  </script>
+</body>
+</html>

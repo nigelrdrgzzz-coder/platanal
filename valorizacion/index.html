@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Valorización — Platanal</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <nav>
+    <a href="../maestros/index.html" class="logo">🍌 Platanal</a>
+    <a href="../maestros/index.html">Maestros</a>
+    <a href="../recepcion/index.html">Recepción</a>
+    <a href="../calidad/index.html">Calidad</a>
+    <a href="index.html" class="active">Valorización</a>
+    <a href="../stock/index.html">Stock</a>
+    <a href="../despacho/index.html">Despacho</a>
+    <a href="../dashboard/index.html">Dashboard</a>
+    <span style="margin-left:auto;color:rgba(255,255,255,0.7);font-size:13px">Nigel — Gerente</span>
+  </nav>
+  <div id="loading"><div class="spinner"></div></div>
+  <div class="container">
+    <div class="page-header">
+      <h1>Valorización / Liquidaciones</h1>
+      <button class="btn btn-primary" onclick="openModal()">+ Nueva liquidación</button>
+    </div>
+    <div id="alert"></div>
+
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Cosechero</th><th>Finca</th><th>Período</th><th>Total €</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal" class="modal-overlay">
+    <div class="modal" style="max-width:700px">
+      <div class="modal-header">
+        <h2>Nueva Liquidación</h2>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Cosechero *</label><select id="m_cosechero"><option value="">— Selecciona —</option></select></div>
+        <div class="form-group"><label>Desde</label><input type="date" id="m_desde"></div>
+        <div class="form-group"><label>Hasta</label><input type="date" id="m_hasta"></div>
+      </div>
+      <button class="btn btn-secondary" onclick="calcular()" style="margin-bottom:16px">Calcular</button>
+      <div id="calculo_resultado"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" id="btn_guardar" onclick="guardar()" disabled>Guardar Liquidación</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/supabase.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script>
+    let liquidaciones = [], cosecheros = [], tarifas = [], calculado = null;
+
+    async function init() {
+      showLoading(true);
+      const [{ data: liq }, { data: cos }, { data: tar }] = await Promise.all([
+        sb.from('liquidaciones').select('*, cosecheros(nombre), fincas(nombre)').order('created_at', { ascending: false }),
+        sb.from('cosecheros').select('*, fincas(nombre)').eq('activo', true).order('nombre'),
+        sb.from('tarifas').select('*')
+      ]);
+      liquidaciones = liq || []; cosecheros = cos || []; tarifas = tar || [];
+      showLoading(false);
+      renderTabla();
+      const sel = document.getElementById('m_cosechero');
+      cosecheros.forEach(c => sel.innerHTML += `<option value="${c.id}" data-finca="${c.finca_id}">${c.nombre} — ${c.fincas?.nombre||''}</option>`);
+    }
+
+    function renderTabla() {
+      document.getElementById('tbody').innerHTML = liquidaciones.length
+        ? liquidaciones.map(l => `
+          <tr>
+            <td><strong>${l.cosecheros?.nombre||'—'}</strong></td>
+            <td>${l.fincas?.nombre||'—'}</td>
+            <td>${formatDate(l.periodo_desde)} → ${formatDate(l.periodo_hasta)}</td>
+            <td><strong>${formatEur(l.total_eur)}</strong></td>
+            <td>${badgeEstado(l.estado)}</td>
+            <td>${l.estado==='borrador'?`<button class="btn btn-sm btn-primary" onclick="aprobar('${l.id}')">Aprobar</button>`:''}</td>
+          </tr>`).join('')
+        : '<tr><td colspan="6" style="text-align:center;padding:40px;color:#6c757d">Sin liquidaciones</td></tr>';
+    }
+
+    function openModal() {
+      const hoy = new Date().toISOString().split('T')[0];
+      const inicio = new Date(); inicio.setDate(1);
+      document.getElementById('m_desde').value = inicio.toISOString().split('T')[0];
+      document.getElementById('m_hasta').value = hoy;
+      document.getElementById('calculo_resultado').innerHTML = '';
+      document.getElementById('btn_guardar').disabled = true;
+      calculado = null;
+      document.getElementById('modal').classList.add('open');
+    }
+    function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+    async function calcular() {
+      const cosId = document.getElementById('m_cosechero').value;
+      const desde = document.getElementById('m_desde').value;
+      const hasta = document.getElementById('m_hasta').value;
+      if (!cosId || !desde || !hasta) { showAlert('Rellena todos los campos', 'error'); return; }
+      showLoading(true);
+      const { data: albs } = await sb.from('albaranes_entrada')
+        .select('*').eq('cosechero_id', cosId)
+        .in('estado', ['inspeccionado','liquidado'])
+        .gte('fecha', desde).lte('fecha', hasta);
+      showLoading(false);
+      const rows = albs || [];
+      if (!rows.length) { document.getElementById('calculo_resultado').innerHTML = '<p style="color:var(--naranja)">No hay albaranes inspeccionados en este período</p>'; return; }
+
+      const getTarifa = cat => (tarifas.find(t => t.categoria === cat)?.precio_kg || 0);
+      let total = 0;
+      const lineas = rows.map(a => {
+        const subtotales = [
+          { cat:'Extra', kg: a.kg_extra||0, precio: getTarifa('extra') },
+          { cat:'Mercadona', kg: a.kg_mercadona||0, precio: getTarifa('mercadona') },
+          { cat:'Primera', kg: a.kg_primera||0, precio: getTarifa('primera') },
+          { cat:'Segunda', kg: a.kg_segunda||0, precio: getTarifa('segunda') },
+          { cat:'Desecho', kg: a.kg_desecho||0, precio: getTarifa('desecho') },
+          { cat:'Dedos', kg: a.kg_dedos||0, precio: getTarifa('dedos') },
+        ].filter(s => s.kg > 0);
+        const subtotal = subtotales.reduce((s,x) => s + x.kg * x.precio, 0);
+        total += subtotal;
+        return { albaran: a.numero, subtotales, subtotal };
+      });
+
+      calculado = { cosId, desde, hasta, total, lineas, finca_id: document.getElementById('m_cosechero').selectedOptions[0]?.dataset?.finca };
+
+      document.getElementById('calculo_resultado').innerHTML = `
+        <table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:12px">
+          <thead><tr style="background:#f0f0f0"><th style="padding:6px 8px;text-align:left">Albarán</th><th style="padding:6px 8px;text-align:left">Calidad</th><th style="padding:6px 8px;text-align:right">Kg</th><th style="padding:6px 8px;text-align:right">€/kg</th><th style="padding:6px 8px;text-align:right">Subtotal</th></tr></thead>
+          <tbody>${lineas.map(l => l.subtotales.map((s,i) => `<tr><td style="padding:5px 8px;border-bottom:1px solid #eee">${i===0?l.albaran:''}</td><td style="padding:5px 8px;border-bottom:1px solid #eee">${s.cat}</td><td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:right">${s.kg.toLocaleString('es-ES')}</td><td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:right">${s.precio.toFixed(2)}</td><td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:right">${formatEur(s.kg*s.precio)}</td></tr>`).join('')).join('')}</tbody>
+        </table>
+        <div style="text-align:right;font-size:18px;font-weight:700;color:var(--verde)">TOTAL: ${formatEur(total)}</div>`;
+      document.getElementById('btn_guardar').disabled = false;
+    }
+
+    async function guardar() {
+      if (!calculado) return;
+      showLoading(true);
+      await sb.from('liquidaciones').insert({ cosechero_id: calculado.cosId, finca_id: calculado.finca_id||null, periodo_desde: calculado.desde, periodo_hasta: calculado.hasta, total_eur: calculado.total, estado: 'borrador' });
+      showLoading(false);
+      closeModal();
+      showAlert('Liquidación creada — pendiente de aprobación del gerente');
+      await init();
+    }
+
+    async function aprobar(id) {
+      showLoading(true);
+      await sb.from('liquidaciones').update({ estado: 'aprobada' }).eq('id', id);
+      showLoading(false);
+      showAlert('Liquidación aprobada');
+      await init();
+    }
+
+    init();
+  </script>
+</body>
+</html>

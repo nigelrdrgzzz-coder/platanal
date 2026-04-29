@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Despacho — Platanal</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <nav>
+    <a href="../maestros/index.html" class="logo">🍌 Platanal</a>
+    <a href="../maestros/index.html">Maestros</a>
+    <a href="../recepcion/index.html">Recepción</a>
+    <a href="../calidad/index.html">Calidad</a>
+    <a href="../valorizacion/index.html">Valorización</a>
+    <a href="../stock/index.html">Stock</a>
+    <a href="index.html" class="active">Despacho</a>
+    <a href="../dashboard/index.html">Dashboard</a>
+    <span style="margin-left:auto;color:rgba(255,255,255,0.7);font-size:13px">Nigel — Gerente</span>
+  </nav>
+  <div id="loading"><div class="spinner"></div></div>
+  <div class="container">
+    <div class="page-header">
+      <h1>Despacho</h1>
+      <button class="btn btn-primary" onclick="openModal()">+ Nuevo despacho</button>
+    </div>
+    <div id="alert"></div>
+
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Nº</th><th>Cliente</th><th>Conductor</th><th>Fecha entrega</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Nuevo Despacho</h2>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="form-group"><label>Cliente *</label><select id="m_cliente"><option value="">— Selecciona —</option></select></div>
+      <div class="form-group"><label>Conductor *</label><select id="m_conductor"><option value="">— Selecciona —</option></select></div>
+      <div class="form-group"><label>Fecha de entrega *</label><input type="date" id="m_fecha"></div>
+      <div class="form-group"><label>Lote a despachar *</label><select id="m_lote"><option value="">— Selecciona lote —</option></select></div>
+      <div class="form-group"><label>Kg a despachar *</label><input type="number" id="m_kg" min="0" placeholder="0"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardar()">Crear Despacho</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/supabase.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script>
+    let despachos = [];
+
+    async function init() {
+      showLoading(true);
+      const [{ data: d }, { data: clientes }, { data: conductores }, { data: lotes }] = await Promise.all([
+        sb.from('albaranes_salida').select('*, clientes:pedidos(clientes(nombre)), conductores(nombre)').order('created_at', { ascending: false }),
+        sb.from('clientes').select('*').eq('activo', true),
+        sb.from('conductores').select('*').eq('activo', true),
+        sb.from('lotes').select('*, albaranes_entrada(fincas(nombre))').eq('estado','en_stock')
+      ]);
+      despachos = d || [];
+      showLoading(false);
+      renderTabla();
+
+      const selC = document.getElementById('m_cliente');
+      const selCo = document.getElementById('m_conductor');
+      const selL = document.getElementById('m_lote');
+      (clientes||[]).forEach(c => selC.innerHTML += `<option value="${c.id}">${c.nombre}</option>`);
+      (conductores||[]).forEach(c => selCo.innerHTML += `<option value="${c.id}">${c.nombre}</option>`);
+      (lotes||[]).forEach(l => selL.innerHTML += `<option value="${l.id}">${l.codigo} — ${l.albaranes_entrada?.fincas?.nombre||'—'} — ${(l.kg_actuales||0).toLocaleString('es-ES')} kg</option>`);
+    }
+
+    function renderTabla() {
+      document.getElementById('tbody').innerHTML = despachos.length
+        ? despachos.map(d => `
+          <tr>
+            <td><strong>${d.numero}</strong></td>
+            <td>${d.clientes?.clientes?.nombre||'—'}</td>
+            <td>${d.conductores?.nombre||'—'}</td>
+            <td>${formatDate(d.fecha_entrega)}</td>
+            <td>${badgeEstado(d.estado)}</td>
+            <td>${d.estado==='asignado'?`<button class="btn btn-sm btn-primary" onclick="confirmar('${d.id}')">Confirmar entrega</button>`:''}</td>
+          </tr>`).join('')
+        : '<tr><td colspan="6" style="text-align:center;padding:40px;color:#6c757d">Sin despachos registrados</td></tr>';
+    }
+
+    function openModal() {
+      document.getElementById('m_fecha').value = new Date().toISOString().split('T')[0];
+      document.getElementById('modal').classList.add('open');
+    }
+    function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+    async function guardar() {
+      const cliente_id = document.getElementById('m_cliente').value;
+      const conductor_id = document.getElementById('m_conductor').value;
+      const fecha = document.getElementById('m_fecha').value;
+      const lote_id = document.getElementById('m_lote').value;
+      const kg = parseFloat(document.getElementById('m_kg').value)||0;
+      if (!cliente_id || !conductor_id || !fecha || !lote_id || !kg) { showAlert('Rellena todos los campos', 'error'); return; }
+      showLoading(true);
+      const numero = 'DSP-' + Date.now();
+      const { data: pedido } = await sb.from('pedidos').insert({ cliente_id, fecha, estado: 'pendiente' }).select().single();
+      await sb.from('albaranes_salida').insert({ numero, pedido_id: pedido.id, conductor_id, fecha_entrega: fecha, estado: 'asignado' });
+      showLoading(false);
+      closeModal();
+      showAlert('Despacho creado');
+      await init();
+    }
+
+    async function confirmar(id) {
+      showLoading(true);
+      await sb.from('albaranes_salida').update({ estado: 'entregado' }).eq('id', id);
+      showLoading(false);
+      showAlert('Entrega confirmada');
+      await init();
+    }
+
+    init();
+  </script>
+</body>
+</html>

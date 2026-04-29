@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recepción — Platanal</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:20px; }
+    .stat { background:white; border-radius:var(--radius); padding:16px; box-shadow:var(--shadow); border-left:4px solid var(--verde); }
+    .stat-val { font-size:22px; font-weight:700; color:var(--verde); }
+    .stat-lbl { font-size:11px; text-transform:uppercase; color:var(--gris-texto); font-weight:600; margin-top:2px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="../maestros/index.html" class="logo">🍌 Platanal</a>
+    <a href="../maestros/index.html">Maestros</a>
+    <a href="index.html" class="active">Recepción</a>
+    <a href="../calidad/index.html">Calidad</a>
+    <span style="margin-left:auto;color:rgba(255,255,255,0.7);font-size:13px">Nigel — Gerente</span>
+  </nav>
+
+  <div id="loading"><div class="spinner"></div></div>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Recepción de Fruta</h1>
+      <a href="nuevo.html" class="btn btn-primary">+ Nueva recepción</a>
+    </div>
+    <div id="alert"></div>
+
+    <!-- KPIs DEL DÍA -->
+    <div class="stats">
+      <div class="stat"><div class="stat-val" id="kpi_hoy">0</div><div class="stat-lbl">Albaranes hoy</div></div>
+      <div class="stat"><div class="stat-val" id="kpi_kg">0</div><div class="stat-lbl">Kg hoy</div></div>
+      <div class="stat"><div class="stat-val" id="kpi_pendientes">0</div><div class="stat-lbl">Pendientes calidad</div></div>
+      <div class="stat"><div class="stat-val" id="kpi_semana">0</div><div class="stat-lbl">Albaranes semana</div></div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="card">
+      <div class="search-bar">
+        <input id="search" placeholder="Buscar finca o cosechero..." oninput="filtrar()" style="max-width:300px">
+        <select id="filtro_estado" onchange="filtrar()">
+          <option value="">Todos los estados</option>
+          <option value="confirmado">Confirmado</option>
+          <option value="inspeccionado">Inspeccionado</option>
+          <option value="liquidado">Liquidado</option>
+        </select>
+        <input type="date" id="filtro_fecha" onchange="filtrar()">
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Nº Albarán</th>
+              <th>Fecha</th>
+              <th>Semana</th>
+              <th>Finca</th>
+              <th>Cosechero</th>
+              <th>Racimos</th>
+              <th>Kg Total</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/supabase.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script>
+    let albaranes = [];
+
+    async function init() {
+      showLoading(true);
+      const { data, error } = await sb.from('albaranes_entrada')
+        .select('*, fincas(nombre), cosecheros(nombre)')
+        .order('created_at', { ascending: false });
+      showLoading(false);
+
+      if (error) { document.getElementById('tbody').innerHTML = `<tr><td colspan="9" style="text-align:center;color:red;padding:20px">Error: ${error.message}</td></tr>`; return; }
+
+      albaranes = data || [];
+      calcKpis();
+      renderTabla(albaranes);
+    }
+
+    function calcKpis() {
+      const hoy = new Date().toISOString().split('T')[0];
+      const semana = Math.ceil((new Date() - new Date(new Date().getFullYear(), 0, 1)) / 604800000);
+      const deHoy = albaranes.filter(a => a.fecha === hoy);
+      const deSemana = albaranes.filter(a => a.semana == semana);
+      const pendientes = albaranes.filter(a => a.estado === 'confirmado');
+
+      document.getElementById('kpi_hoy').textContent = deHoy.length;
+      document.getElementById('kpi_kg').textContent = deHoy.reduce((s,a) => s + (a.kg_total||0), 0).toLocaleString('es-ES');
+      document.getElementById('kpi_pendientes').textContent = pendientes.length;
+      document.getElementById('kpi_semana').textContent = deSemana.length;
+    }
+
+    function renderTabla(rows) {
+      if (!rows.length) {
+        document.getElementById('tbody').innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#6c757d">No hay albaranes registrados</td></tr>';
+        return;
+      }
+      document.getElementById('tbody').innerHTML = rows.map(a => `
+        <tr>
+          <td><strong>${a.numero}</strong></td>
+          <td>${formatDate(a.fecha)}</td>
+          <td>${a.semana || '—'}</td>
+          <td>${a.fincas?.nombre || '—'}</td>
+          <td>${a.cosecheros?.nombre || '—'}</td>
+          <td>${a.racimos || '—'}</td>
+          <td><strong>${(a.kg_total||0).toLocaleString('es-ES')} kg</strong></td>
+          <td>${badgeEstado(a.estado)}</td>
+          <td>
+            <a href="detalle.html?id=${a.id}" class="btn btn-sm btn-secondary">Ver</a>
+            ${a.estado === 'confirmado' ? `<a href="../calidad/inspeccion.html?id=${a.id}" class="btn btn-sm btn-primary">Inspeccionar</a>` : ''}
+          </td>
+        </tr>`).join('');
+    }
+
+    function filtrar() {
+      const q = document.getElementById('search').value.toLowerCase();
+      const estado = document.getElementById('filtro_estado').value;
+      const fecha = document.getElementById('filtro_fecha').value;
+      const filtrados = albaranes.filter(a => {
+        const texto = `${a.fincas?.nombre||''} ${a.cosecheros?.nombre||''} ${a.numero}`.toLowerCase();
+        return (!q || texto.includes(q)) && (!estado || a.estado === estado) && (!fecha || a.fecha === fecha);
+      });
+      renderTabla(filtrados);
+    }
+
+    init();
+  </script>
+</body>
+</html>
