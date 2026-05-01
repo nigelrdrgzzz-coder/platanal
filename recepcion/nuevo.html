@@ -4,227 +4,190 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nueva Recepción — Platanal</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
-  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    .albaran-preview {
-      background: #fff;
-      border: 2px solid var(--verde);
-      border-radius: var(--radius);
-      padding: 24px;
-      font-size: 13px;
-    }
-    .albaran-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 16px; }
-    .albaran-header h2 { font-size: 15px; font-weight: 700; }
-    .albaran-header p { font-size: 12px; color: #444; }
-    .albaran-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; font-size: 12px; }
-    .albaran-meta strong { color: var(--verde); }
-    .albaran-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 12px; }
-    .albaran-table th { background: #f0f0f0; padding: 6px 8px; text-align: left; border: 1px solid #ccc; }
-    .albaran-table td { padding: 6px 8px; border: 1px solid #ccc; text-align: right; }
-    .albaran-table td:first-child { text-align: left; }
-    .albaran-table tr.total { font-weight: 700; background: #f9f9f9; }
-    .section-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      font-weight: 700;
-      color: var(--gris-texto);
-      letter-spacing: 0.5px;
-      margin-bottom: 12px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid var(--gris);
-    }
-    .kg-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; align-items: end; margin-bottom: 8px; }
-    .kg-row label { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
-    .total-box { background: var(--verde); color: white; border-radius: var(--radius); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
-    .total-box span { font-size: 13px; opacity: 0.85; }
-    .total-box strong { font-size: 22px; }
+    .grid-form { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .albaran-preview { border:2px solid var(--verde); border-radius:12px; padding:20px; font-size:13px; background:white; }
+    .albaran-header { text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:14px; }
+    .albaran-header h2 { font-size:14px; font-weight:700; }
+    .albaran-header p { font-size:11px; color:#555; }
+    .albaran-meta { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:12px; font-size:12px; }
+    .albaran-meta strong { color:var(--verde); }
+    .albaran-table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:10px; }
+    .albaran-table th { background:#f5f5f5; padding:5px 8px; text-align:left; border:1px solid #ddd; font-weight:600; }
+    .albaran-table td { padding:5px 8px; border:1px solid #ddd; text-align:right; }
+    .albaran-table td:first-child { text-align:left; }
+    .albaran-table tr.total-row td { font-weight:700; background:#f9f9f9; }
+    .kg-grid { display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; align-items:end; margin-bottom:6px; }
+    .kg-grid-header { display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; margin-bottom:4px; }
+    .kg-grid-header span { font-size:11px; font-weight:700; color:var(--subtexto); text-transform:uppercase; }
+    .total-bar { background:var(--verde); color:white; border-radius:8px; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
+    .total-bar span { font-size:13px; opacity:0.8; }
+    .total-bar strong { font-size:20px; }
+    @media(max-width:900px) { .grid-form { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
-  <nav>
-    <a href="../maestros/index.html" class="logo">🍌 Platanal</a>
-    <a href="../maestros/index.html">Maestros</a>
-    <a href="index.html">Recepción</a>
-    <a href="../calidad/index.html">Calidad</a>
-    <span style="margin-left:auto;color:rgba(255,255,255,0.7);font-size:13px">Nigel — Gerente</span>
-  </nav>
-
-  <div id="loading"><div class="spinner"></div></div>
-
-  <div class="container">
-    <div class="page-header">
-      <h1>Nueva Recepción de Fruta</h1>
-      <a href="index.html" class="btn btn-secondary">← Volver</a>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>Nueva Recepción</h2>
+        <div class="topbar-sub">Introduce los datos del albarán en papel</div>
+      </div>
+      <div class="topbar-right">
+        <a href="index.html" class="btn btn-secondary">← Volver</a>
+      </div>
     </div>
-    <div id="alert"></div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
+    <div class="content">
+      <div id="alert"></div>
+      <div class="grid-form">
 
-      <!-- FORMULARIO -->
-      <div>
-        <div class="card">
-          <div class="section-title">Datos de la entrega</div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Fecha *</label>
-              <input type="date" id="fecha">
+        <!-- FORMULARIO -->
+        <div>
+          <div class="card">
+            <div class="card-header"><h3>Datos de la entrega</h3></div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="form-group"><label>Fecha *</label><input type="date" id="fecha"></div>
+                <div class="form-group"><label>Semana</label><input type="number" id="semana" min="1" max="53"></div>
+              </div>
+              <div class="form-group">
+                <label>Finca *</label>
+                <select id="finca_id" onchange="onFincaChange()">
+                  <option value="">— Selecciona finca —</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Cosechero *</label>
+                <select id="cosechero_id" onchange="actualizarPreview()">
+                  <option value="">— Selecciona cosechero —</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Nº de racimos *</label>
+                <input type="number" id="racimos" min="0" placeholder="0" oninput="calcular()">
+              </div>
             </div>
-            <div class="form-group">
-              <label>Semana</label>
-              <input type="number" id="semana" min="1" max="53" placeholder="Nº semana">
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h3>Calidades recibidas</h3></div>
+            <div class="card-body">
+              <div class="kg-grid-header">
+                <span>Calidad</span><span>Cajas</span><span>Kg</span>
+              </div>
+              <div class="kg-grid">
+                <label style="font-size:13px;font-weight:600">Extra (10 kg/caja)</label>
+                <input type="number" id="cajas_extra" min="0" placeholder="0" oninput="calcKg('extra',10)">
+                <input type="number" id="kg_extra" min="0" placeholder="0" oninput="calcular()">
+              </div>
+              <div class="kg-grid">
+                <label style="font-size:13px;font-weight:600">Mercadona (16-17 kg)</label>
+                <input type="number" id="cajas_mercadona" min="0" placeholder="0" oninput="calcKg('mercadona',16.5)">
+                <input type="number" id="kg_mercadona" min="0" placeholder="0" oninput="calcular()">
+              </div>
+              <div class="kg-grid">
+                <label style="font-size:13px;font-weight:600">Primera (18 kg/caja)</label>
+                <input type="number" id="cajas_primera" min="0" placeholder="0" oninput="calcKg('primera',18)">
+                <input type="number" id="kg_primera" min="0" placeholder="0" oninput="calcular()">
+              </div>
+              <div class="kg-grid">
+                <label style="font-size:13px;font-weight:600">Segunda (10 kg/caja)</label>
+                <input type="number" id="cajas_segunda" min="0" placeholder="0" oninput="calcKg('segunda',10)">
+                <input type="number" id="kg_segunda" min="0" placeholder="0" oninput="calcular()">
+              </div>
+              <div class="kg-grid">
+                <label style="font-size:13px;font-weight:600">Desecho</label>
+                <span></span>
+                <input type="number" id="kg_desecho" min="0" placeholder="0" oninput="calcular()">
+              </div>
+              <div class="kg-grid">
+                <label style="font-size:13px;font-weight:600">Dedos</label>
+                <span></span>
+                <input type="number" id="kg_dedos" min="0" placeholder="0" oninput="calcular()">
+              </div>
+              <div class="total-bar">
+                <span>TOTAL</span>
+                <strong id="total_cajas">0 cajas</strong>
+                <strong id="total_kg">0 kg</strong>
+              </div>
             </div>
           </div>
-          <div class="form-group">
-            <label>Finca *</label>
-            <select id="finca_id" onchange="onFincaChange()">
-              <option value="">— Selecciona finca —</option>
-            </select>
+
+          <div class="card">
+            <div class="card-header"><h3>Observaciones</h3></div>
+            <div class="card-body">
+              <textarea id="observaciones" placeholder="Notas adicionales..." style="margin:0"></textarea>
+            </div>
           </div>
-          <div class="form-group">
-            <label>Cosechero *</label>
-            <select id="cosechero_id">
-              <option value="">— Selecciona cosechero —</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Nº de racimos *</label>
-            <input type="number" id="racimos" min="0" placeholder="0" oninput="calcular()">
-          </div>
+
+          <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="guardar()">
+            Guardar y pasar a verificación →
+          </button>
         </div>
 
-        <div class="card">
-          <div class="section-title">Calidades recibidas</div>
-
-          <div class="kg-row">
-            <span style="font-size:12px;font-weight:700;color:var(--gris-texto)">CALIDAD</span>
-            <span style="font-size:12px;font-weight:700;color:var(--gris-texto)">CAJAS</span>
-            <span style="font-size:12px;font-weight:700;color:var(--gris-texto)">KG</span>
-          </div>
-
-          <div class="kg-row">
-            <label>Extra (10 kg/caja)</label>
-            <input type="number" id="cajas_extra" min="0" placeholder="0" oninput="calcKg('extra',10)">
-            <input type="number" id="kg_extra" min="0" placeholder="0" oninput="calcular()" style="background:#f8f9fa">
-          </div>
-
-          <div class="kg-row">
-            <label>Mercadona (16-17 kg/caja)</label>
-            <input type="number" id="cajas_mercadona" min="0" placeholder="0" oninput="calcKg('mercadona',16.5)">
-            <input type="number" id="kg_mercadona" min="0" placeholder="0" oninput="calcular()" style="background:#f8f9fa">
-          </div>
-
-          <div class="kg-row">
-            <label>Primera (18 kg/caja)</label>
-            <input type="number" id="cajas_primera" min="0" placeholder="0" oninput="calcKg('primera',18)">
-            <input type="number" id="kg_primera" min="0" placeholder="0" oninput="calcular()" style="background:#f8f9fa">
-          </div>
-
-          <div class="kg-row">
-            <label>Segunda (10 kg/caja)</label>
-            <input type="number" id="cajas_segunda" min="0" placeholder="0" oninput="calcKg('segunda',10)">
-            <input type="number" id="kg_segunda" min="0" placeholder="0" oninput="calcular()" style="background:#f8f9fa">
-          </div>
-
-          <div class="kg-row">
-            <label>Desecho</label>
-            <span></span>
-            <input type="number" id="kg_desecho" min="0" placeholder="0" oninput="calcular()">
-          </div>
-
-          <div class="kg-row">
-            <label>Dedos</label>
-            <span></span>
-            <input type="number" id="kg_dedos" min="0" placeholder="0" oninput="calcular()">
-          </div>
-
-          <div class="total-box">
-            <span>TOTAL</span>
-            <strong id="total_cajas">0 cajas</strong>
-            <strong id="total_kg">0 kg</strong>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">Observaciones</div>
-          <div class="form-group" style="margin:0">
-            <textarea id="observaciones" placeholder="Comentarios opcionales..."></textarea>
-          </div>
-        </div>
-
-        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px" onclick="guardar()">
-          Generar Albarán y Enviar Email ✓
-        </button>
-      </div>
-
-      <!-- PREVIEW ALBARÁN -->
-      <div>
-        <div class="card">
-          <div class="section-title">Vista previa del albarán</div>
-          <div class="albaran-preview" id="preview">
-            <div class="albaran-header">
-              <h2>AGRÍCOLA LLANOS DE SARDINA, S.C.C.</h2>
-              <p>Cruz de Pineda, Carretera Cruz de Pineda 3, 35414 Arucas</p>
-            </div>
-            <div class="albaran-meta">
-              <div><strong>Entrega Nº:</strong> <span id="p_numero">—</span></div>
-              <div><strong>Emitida:</strong> <span id="p_fecha">—</span></div>
-              <div><strong>Semana:</strong> <span id="p_semana">—</span></div>
-              <div><strong>Racimos:</strong> <span id="p_racimos">—</span></div>
-            </div>
-            <div style="background:#e8f5e9;padding:8px 10px;border-radius:4px;margin-bottom:12px;font-size:12px">
-              <strong>Finca:</strong> <span id="p_finca">—</span><br>
-              <strong>Cosechero:</strong> <span id="p_cosechero">—</span>
-            </div>
-            <table class="albaran-table">
-              <thead>
-                <tr>
-                  <th>Calidad</th>
-                  <th>Cajas</th>
-                  <th>Kilos</th>
-                  <th>%</th>
-                </tr>
-              </thead>
-              <tbody id="p_lineas">
-                <tr><td colspan="4" style="text-align:center;color:#999;padding:20px">Rellena el formulario...</td></tr>
-              </tbody>
-            </table>
-            <div style="font-size:12px;margin-top:8px">
-              <strong>Peso Medio:</strong> <span id="p_peso_medio">—</span> kg
+        <!-- PREVIEW -->
+        <div>
+          <div class="card" style="position:sticky;top:80px">
+            <div class="card-header"><h3>📄 Vista previa</h3></div>
+            <div class="card-body">
+              <div class="albaran-preview">
+                <div class="albaran-header">
+                  <h2>AGRÍCOLA LLANOS DE SARDINA, S.C.C.</h2>
+                  <p>Cruz de Pineda, Carretera Cruz de Pineda 3, 35414 Arucas</p>
+                </div>
+                <div class="albaran-meta">
+                  <div><strong>Entrega Nº:</strong> —</div>
+                  <div><strong>Emitida:</strong> <span id="p_fecha">—</span></div>
+                  <div><strong>Semana:</strong> <span id="p_semana">—</span></div>
+                  <div><strong>Racimos:</strong> <span id="p_racimos">—</span></div>
+                </div>
+                <div style="background:#f0f7f4;padding:8px 10px;border-radius:6px;margin-bottom:10px;font-size:12px">
+                  <strong>Finca:</strong> <span id="p_finca">—</span><br>
+                  <strong>Cosechero:</strong> <span id="p_cosechero">—</span>
+                </div>
+                <table class="albaran-table">
+                  <thead><tr><th>Calidad</th><th>Cajas</th><th>Kilos</th><th>%</th></tr></thead>
+                  <tbody id="p_lineas"><tr><td colspan="4" style="text-align:center;color:#999;padding:12px">Rellena el formulario...</td></tr></tbody>
+                </table>
+                <div style="font-size:12px"><strong>Peso Medio:</strong> <span id="p_peso">—</span> kg</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 
+  <div id="loading"><div class="spinner"></div></div>
+
   <script src="../assets/js/supabase.js"></script>
+  <script src="../assets/js/auth.js"></script>
   <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/layout.js"></script>
   <script>
     let fincas = [], cosecheros = [];
 
-    // Fecha y semana de hoy por defecto
-    const hoy = new Date();
-    document.getElementById('fecha').value = hoy.toISOString().split('T')[0];
-    const semana = Math.ceil((hoy - new Date(hoy.getFullYear(), 0, 1)) / 604800000);
-    document.getElementById('semana').value = semana;
-
     async function init() {
+      renderSidebar('recepcion');
+      const hoy = new Date();
+      document.getElementById('fecha').value = hoy.toISOString().split('T')[0];
+      document.getElementById('semana').value = Math.ceil((hoy - new Date(hoy.getFullYear(),0,1))/604800000);
       showLoading(true);
-      const { data: f } = await sb.from('fincas').select('*').eq('activa', true).order('nombre');
-      fincas = f || [];
-      fincas.forEach(f => {
-        document.getElementById('finca_id').innerHTML += `<option value="${f.id}">${f.nombre}</option>`;
-      });
-      const { data: c } = await sb.from('cosecheros').select('*').eq('activo', true).order('nombre');
-      cosecheros = c || [];
+      const [{ data: f }, { data: c }] = await Promise.all([
+        sb.from('fincas').select('*').eq('activa', true).order('nombre'),
+        sb.from('cosecheros').select('*').eq('activo', true).order('nombre')
+      ]);
+      fincas = f||[]; cosecheros = c||[];
+      fincas.forEach(f => document.getElementById('finca_id').innerHTML += `<option value="${f.id}">${f.nombre}</option>`);
       showLoading(false);
       actualizarPreview();
     }
 
-    async function onFincaChange() {
+    function onFincaChange() {
       const fincaId = document.getElementById('finca_id').value;
       const sel = document.getElementById('cosechero_id');
       sel.innerHTML = '<option value="">— Selecciona cosechero —</option>';
@@ -235,130 +198,75 @@
     }
 
     function calcKg(cat, kgPorCaja) {
-      const cajas = parseFloat(document.getElementById(`cajas_${cat}`).value) || 0;
-      document.getElementById(`kg_${cat}`).value = (cajas * kgPorCaja).toFixed(0);
+      const cajas = parseFloat(document.getElementById(`cajas_${cat}`).value)||0;
+      document.getElementById(`kg_${cat}`).value = Math.round(cajas * kgPorCaja);
       calcular();
     }
 
+    function getN(id) { return parseFloat(document.getElementById(id).value)||0; }
+    function getI(id) { return parseInt(document.getElementById(id).value)||0; }
+
     function calcular() {
+      const totalCajas = getI('cajas_extra')+getI('cajas_mercadona')+getI('cajas_primera')+getI('cajas_segunda');
+      const totalKg = getN('kg_extra')+getN('kg_mercadona')+getN('kg_primera')+getN('kg_segunda')+getN('kg_desecho')+getN('kg_dedos');
+      document.getElementById('total_cajas').textContent = totalCajas + ' cajas';
+      document.getElementById('total_kg').textContent = totalKg.toLocaleString('es-ES') + ' kg';
       actualizarPreview();
     }
 
-    function getVal(id) { return parseFloat(document.getElementById(id).value) || 0; }
-    function getInt(id) { return parseInt(document.getElementById(id).value) || 0; }
-
     function actualizarPreview() {
-      const cajas_e = getInt('cajas_extra'), kg_e = getVal('kg_extra');
-      const cajas_m = getInt('cajas_mercadona'), kg_m = getVal('kg_mercadona');
-      const cajas_p = getInt('cajas_primera'), kg_p = getVal('kg_primera');
-      const cajas_s = getInt('cajas_segunda'), kg_s = getVal('kg_segunda');
-      const kg_d = getVal('kg_desecho');
-      const kg_dd = getVal('kg_dedos');
-
-      const totalCajas = cajas_e + cajas_m + cajas_p + cajas_s;
-      const totalKg = kg_e + kg_m + kg_p + kg_s + kg_d + kg_dd;
-      const racimos = getInt('racimos');
-      const pesoMedio = racimos > 0 ? (totalKg / racimos).toFixed(3) : '—';
-
-      document.getElementById('total_cajas').textContent = totalCajas + ' cajas';
-      document.getElementById('total_kg').textContent = totalKg.toLocaleString('es-ES') + ' kg';
-
-      // Preview
       const fecha = document.getElementById('fecha').value;
-      document.getElementById('p_fecha').textContent = fecha ? new Date(fecha).toLocaleDateString('es-ES') : '—';
+      document.getElementById('p_fecha').textContent = fecha ? new Date(fecha+'T12:00:00').toLocaleDateString('es-ES') : '—';
       document.getElementById('p_semana').textContent = document.getElementById('semana').value || '—';
+      const racimos = getI('racimos');
       document.getElementById('p_racimos').textContent = racimos || '—';
-
-      const fincaId = document.getElementById('finca_id').value;
-      const finca = fincas.find(f => f.id === fincaId);
-      document.getElementById('p_finca').textContent = finca ? finca.nombre : '—';
-
-      const cosId = document.getElementById('cosechero_id').value;
-      const cos = cosecheros.find(c => c.id === cosId);
-      document.getElementById('p_cosechero').textContent = cos ? cos.nombre : '—';
-      document.getElementById('p_peso_medio').textContent = pesoMedio;
-
-      const lineas = [];
-      if (cajas_e || kg_e) lineas.push({ cal: 'Extra (10 kg)', cajas: cajas_e, kg: kg_e });
-      if (cajas_m || kg_m) lineas.push({ cal: 'Mercadona (16-17 kg)', cajas: cajas_m, kg: kg_m });
-      if (cajas_p || kg_p) lineas.push({ cal: 'Primera (18 kg)', cajas: cajas_p, kg: kg_p });
-      if (cajas_s || kg_s) lineas.push({ cal: 'Segunda (10 kg)', cajas: cajas_s, kg: kg_s });
-      if (kg_d) lineas.push({ cal: 'Desecho', cajas: '—', kg: kg_d });
-      if (kg_dd) lineas.push({ cal: 'Dedos', cajas: '—', kg: kg_dd });
-
-      if (lineas.length === 0) {
-        document.getElementById('p_lineas').innerHTML = '<tr><td colspan="4" style="text-align:center;color:#999;padding:20px">Rellena el formulario...</td></tr>';
-        return;
-      }
-
-      document.getElementById('p_lineas').innerHTML = lineas.map(l => `
-        <tr>
-          <td>${l.cal}</td>
-          <td>${l.cajas}</td>
-          <td>${Number(l.kg).toLocaleString('es-ES')}</td>
-          <td>${totalKg > 0 ? ((l.kg / totalKg) * 100).toFixed(2) : 0}%</td>
-        </tr>
-      `).join('') + `
-        <tr class="total">
-          <td>TOTAL</td>
-          <td>${totalCajas}</td>
-          <td>${totalKg.toLocaleString('es-ES')}</td>
-          <td>100%</td>
-        </tr>
-      `;
+      const finca = fincas.find(f => f.id === document.getElementById('finca_id').value);
+      const cos = cosecheros.find(c => c.id === document.getElementById('cosechero_id').value);
+      document.getElementById('p_finca').textContent = finca?.nombre || '—';
+      document.getElementById('p_cosechero').textContent = cos?.nombre || '—';
+      const totalKg = getN('kg_extra')+getN('kg_mercadona')+getN('kg_primera')+getN('kg_segunda')+getN('kg_desecho')+getN('kg_dedos');
+      document.getElementById('p_peso').textContent = racimos > 0 ? (totalKg/racimos).toFixed(3) : '—';
+      const lineas = [
+        {cal:'Extra (10 kg)', cajas:getI('cajas_extra'), kg:getN('kg_extra')},
+        {cal:'Mercadona (16-17 kg)', cajas:getI('cajas_mercadona'), kg:getN('kg_mercadona')},
+        {cal:'Primera (18 kg)', cajas:getI('cajas_primera'), kg:getN('kg_primera')},
+        {cal:'Segunda (10 kg)', cajas:getI('cajas_segunda'), kg:getN('kg_segunda')},
+        {cal:'Desecho', cajas:'—', kg:getN('kg_desecho')},
+        {cal:'Dedos', cajas:'—', kg:getN('kg_dedos')},
+      ].filter(l => l.kg > 0);
+      const totalCajas = getI('cajas_extra')+getI('cajas_mercadona')+getI('cajas_primera')+getI('cajas_segunda');
+      document.getElementById('p_lineas').innerHTML = lineas.length ? lineas.map(l => `
+        <tr><td>${l.cal}</td><td>${l.cajas}</td><td>${Number(l.kg).toLocaleString('es-ES')}</td><td>${totalKg>0?((l.kg/totalKg)*100).toFixed(2):0}%</td></tr>`).join('') +
+        `<tr class="total-row"><td>TOTAL</td><td>${totalCajas}</td><td>${totalKg.toLocaleString('es-ES')}</td><td>100%</td></tr>` :
+        '<tr><td colspan="4" style="text-align:center;color:#999;padding:12px">Rellena el formulario...</td></tr>';
     }
 
     async function guardar() {
-      const finca_id = document.getElementById('finca_id').value;
-      const cosechero_id = document.getElementById('cosechero_id').value;
-      const fecha = document.getElementById('fecha').value;
-      const racimos = getInt('racimos');
-
-      if (!finca_id || !cosechero_id || !fecha || !racimos) {
-        showAlert('Rellena finca, cosechero, fecha y racimos', 'error');
-        return;
+      if (!document.getElementById('finca_id').value || !document.getElementById('cosechero_id').value || !document.getElementById('fecha').value || !getI('racimos')) {
+        showAlert('Rellena finca, cosechero, fecha y racimos', 'error'); return;
       }
-
       showLoading(true);
-
-      const totalKg = getVal('kg_extra') + getVal('kg_mercadona') + getVal('kg_primera') +
-                      getVal('kg_segunda') + getVal('kg_desecho') + getVal('kg_dedos');
-      const pesoMedio = racimos > 0 ? totalKg / racimos : 0;
-      const numero = 'ALB-' + Date.now();
-
-      const datos = {
-        numero,
-        fecha,
-        semana: getInt('semana'),
-        finca_id,
-        cosechero_id,
+      const totalKg = getN('kg_extra')+getN('kg_mercadona')+getN('kg_primera')+getN('kg_segunda')+getN('kg_desecho')+getN('kg_dedos');
+      const racimos = getI('racimos');
+      const { data, error } = await sb.from('albaranes_entrada').insert({
+        numero: 'ALB-' + Date.now(),
+        fecha: document.getElementById('fecha').value,
+        semana: getI('semana'),
+        finca_id: document.getElementById('finca_id').value,
+        cosechero_id: document.getElementById('cosechero_id').value,
         racimos,
-        cajas_extra: getInt('cajas_extra'),
-        kg_extra: getVal('kg_extra'),
-        cajas_mercadona: getInt('cajas_mercadona'),
-        kg_mercadona: getVal('kg_mercadona'),
-        cajas_primera: getInt('cajas_primera'),
-        kg_primera: getVal('kg_primera'),
-        cajas_segunda: getInt('cajas_segunda'),
-        kg_segunda: getVal('kg_segunda'),
-        kg_desecho: getVal('kg_desecho'),
-        kg_dedos: getVal('kg_dedos'),
-        kg_total: totalKg,
-        peso_medio: pesoMedio,
+        cajas_extra: getI('cajas_extra'), kg_extra: getN('kg_extra'),
+        cajas_mercadona: getI('cajas_mercadona'), kg_mercadona: getN('kg_mercadona'),
+        cajas_primera: getI('cajas_primera'), kg_primera: getN('kg_primera'),
+        cajas_segunda: getI('cajas_segunda'), kg_segunda: getN('kg_segunda'),
+        kg_desecho: getN('kg_desecho'), kg_dedos: getN('kg_dedos'),
+        kg_total: totalKg, peso_medio: racimos > 0 ? totalKg/racimos : 0,
         observaciones: document.getElementById('observaciones').value,
         estado: 'confirmado'
-      };
-
-      const { error } = await sb.from('albaranes_entrada').insert(datos);
+      }).select().single();
       showLoading(false);
-
-      if (error) {
-        showAlert('Error al guardar: ' + error.message, 'error');
-        return;
-      }
-
-      showAlert('Albarán guardado correctamente', 'success');
-      setTimeout(() => window.location.href = 'index.html', 1500);
+      if (error) { showAlert('Error: ' + error.message, 'error'); return; }
+      window.location.href = `verificar.html?id=${data.id}`;
     }
 
     init();

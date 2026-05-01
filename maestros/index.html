@@ -4,172 +4,164 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Maestros — Platanal</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
-  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .tabs { display:flex; gap:4px; margin-bottom:20px; flex-wrap:wrap; }
-    .tab { padding:8px 18px; border-radius:var(--radius); font-size:14px; font-weight:600; cursor:pointer; border:2px solid var(--gris); background:white; color:var(--gris-texto); transition:all 0.15s; }
+    .tab { padding:8px 18px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid var(--gris2); background:white; color:var(--subtexto); transition:all 0.15s; }
     .tab.active { background:var(--verde); color:white; border-color:var(--verde); }
     .tab-content { display:none; }
     .tab-content.active { display:block; }
-    .inline-form { display:grid; gap:12px; margin-bottom:16px; }
-    .actions { display:flex; gap:8px; white-space:nowrap; }
   </style>
 </head>
 <body>
-  <nav>
-    <a href="index.html" class="logo">🍌 Platanal</a>
-    <a href="index.html" class="active">Maestros</a>
-    <a href="../recepcion/index.html">Recepción</a>
-    <a href="../calidad/index.html">Calidad</a>
-    <span style="margin-left:auto;color:rgba(255,255,255,0.7);font-size:13px">Nigel — Gerente</span>
-  </nav>
-
-  <div id="loading"><div class="spinner"></div></div>
-
-  <div class="container">
-    <div class="page-header">
-      <h1>Datos Maestros</h1>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left"><h2>Datos Maestros</h2></div>
     </div>
-    <div id="alert"></div>
-
-    <!-- PESTAÑAS -->
-    <div class="tabs">
-      <button class="tab active" onclick="showTab('fincas')">🌿 Fincas</button>
-      <button class="tab" onclick="showTab('cosecheros')">👨‍🌾 Cosecheros</button>
-      <button class="tab" onclick="showTab('clientes')">🏪 Clientes</button>
-      <button class="tab" onclick="showTab('conductores')">🚛 Conductores</button>
-      <button class="tab" onclick="showTab('camaras')">🧊 Cámaras</button>
-      <button class="tab" onclick="showTab('tarifas')">💶 Tarifas</button>
-    </div>
-
-    <!-- FINCAS -->
-    <div id="tab-fincas" class="tab-content active">
-      <div class="card">
-        <h2 style="margin-bottom:16px">Nueva Finca</h2>
-        <div class="form-row">
-          <div class="form-group"><label>Nombre *</label><input id="f_nombre" placeholder="Ej: El Guincho"></div>
-          <div class="form-group"><label>Ubicación</label><input id="f_ubicacion" placeholder="Ej: Arucas"></div>
-          <div class="form-group"><label>Propietario</label><input id="f_propietario" placeholder="Nombre"></div>
-        </div>
-        <button class="btn btn-primary" onclick="saveFinca()">+ Añadir Finca</button>
+    <div class="content">
+      <div id="alert"></div>
+      <div class="tabs">
+        <button class="tab active" onclick="showTab('fincas',this)">🌿 Fincas</button>
+        <button class="tab" onclick="showTab('cosecheros',this)">👨‍🌾 Cosecheros</button>
+        <button class="tab" onclick="showTab('clientes',this)">🏪 Clientes</button>
+        <button class="tab" onclick="showTab('conductores',this)">🚛 Conductores</button>
+        <button class="tab" onclick="showTab('camaras',this)">🧊 Cámaras</button>
+        <button class="tab" onclick="showTab('tarifas',this)">💶 Tarifas</button>
       </div>
-      <div class="card">
-        <div class="search-bar"><input id="search_fincas" placeholder="Buscar..." oninput="filterTable('fincas')"></div>
-        <div class="table-wrapper">
-          <table><thead><tr><th>Nombre</th><th>Ubicación</th><th>Propietario</th><th>Estado</th><th></th></tr></thead>
-          <tbody id="tbody_fincas"></tbody></table>
-        </div>
-      </div>
-    </div>
 
-    <!-- COSECHEROS -->
-    <div id="tab-cosecheros" class="tab-content">
-      <div class="card">
-        <h2 style="margin-bottom:16px">Nuevo Cosechero</h2>
-        <div class="form-row">
-          <div class="form-group"><label>Nombre *</label><input id="c_nombre" placeholder="Nombre completo"></div>
-          <div class="form-group"><label>Email</label><input id="c_email" type="email" placeholder="email@ejemplo.com"></div>
-          <div class="form-group"><label>Teléfono</label><input id="c_telefono" placeholder="600 000 000"></div>
-          <div class="form-group"><label>Finca</label>
-            <select id="c_finca_id"><option value="">— Sin finca —</option></select>
-          </div>
-          <div class="form-group"><label>IBAN</label><input id="c_iban" placeholder="ES00 0000..."></div>
-        </div>
-        <button class="btn btn-primary" onclick="saveCosechero()">+ Añadir Cosechero</button>
-      </div>
-      <div class="card">
-        <div class="search-bar"><input id="search_cosecheros" placeholder="Buscar..." oninput="filterTable('cosecheros')"></div>
-        <div class="table-wrapper">
-          <table><thead><tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Finca</th><th>Estado</th><th></th></tr></thead>
-          <tbody id="tbody_cosecheros"></tbody></table>
-        </div>
-      </div>
-    </div>
-
-    <!-- CLIENTES -->
-    <div id="tab-clientes" class="tab-content">
-      <div class="card">
-        <h2 style="margin-bottom:16px">Nuevo Cliente</h2>
-        <div class="form-row">
-          <div class="form-group"><label>Nombre *</label><input id="cl_nombre" placeholder="Nombre cliente"></div>
-          <div class="form-group"><label>Email</label><input id="cl_email" type="email" placeholder="email@ejemplo.com"></div>
-          <div class="form-group"><label>Tipo</label>
-            <select id="cl_tipo">
-              <option value="supermercado">Supermercado</option>
-              <option value="mayorista">Mayorista</option>
-              <option value="directo">Directo</option>
-            </select>
+      <!-- FINCAS -->
+      <div id="tab-fincas" class="tab-content active">
+        <div class="card">
+          <div class="card-header"><h3>Nueva Finca</h3></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group"><label>Nombre *</label><input id="f_nombre" placeholder="Ej: El Guincho"></div>
+              <div class="form-group"><label>Ubicación</label><input id="f_ubicacion" placeholder="Ej: Arucas"></div>
+              <div class="form-group"><label>Propietario</label><input id="f_propietario"></div>
+            </div>
+            <button class="btn btn-primary" onclick="saveFinca()">+ Añadir</button>
           </div>
         </div>
-        <button class="btn btn-primary" onclick="saveCliente()">+ Añadir Cliente</button>
-      </div>
-      <div class="card">
-        <div class="search-bar"><input id="search_clientes" placeholder="Buscar..." oninput="filterTable('clientes')"></div>
-        <div class="table-wrapper">
-          <table><thead><tr><th>Nombre</th><th>Email</th><th>Tipo</th><th>Estado</th><th></th></tr></thead>
-          <tbody id="tbody_clientes"></tbody></table>
+        <div class="card">
+          <div class="card-body" style="padding-bottom:0">
+            <input id="s_fincas" placeholder="Buscar..." style="max-width:250px;margin-bottom:12px" oninput="filterTable('fincas')">
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Nombre</th><th>Ubicación</th><th>Propietario</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="tbody_fincas"></tbody></table>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- CONDUCTORES -->
-    <div id="tab-conductores" class="tab-content">
-      <div class="card">
-        <h2 style="margin-bottom:16px">Nuevo Conductor</h2>
-        <div class="form-row">
-          <div class="form-group"><label>Nombre *</label><input id="co_nombre" placeholder="Nombre completo"></div>
-          <div class="form-group"><label>Teléfono</label><input id="co_telefono" placeholder="600 000 000"></div>
-          <div class="form-group"><label>Licencia</label><input id="co_licencia" placeholder="Nº licencia"></div>
+      <!-- COSECHEROS -->
+      <div id="tab-cosecheros" class="tab-content">
+        <div class="card">
+          <div class="card-header"><h3>Nuevo Cosechero</h3></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group"><label>Nombre *</label><input id="c_nombre"></div>
+              <div class="form-group"><label>Email</label><input id="c_email" type="email"></div>
+              <div class="form-group"><label>Teléfono</label><input id="c_telefono"></div>
+              <div class="form-group"><label>Finca</label><select id="c_finca_id"><option value="">— Sin finca —</option></select></div>
+              <div class="form-group"><label>IBAN</label><input id="c_iban" placeholder="ES00 0000..."></div>
+            </div>
+            <button class="btn btn-primary" onclick="saveCosechero()">+ Añadir</button>
+          </div>
         </div>
-        <button class="btn btn-primary" onclick="saveConductor()">+ Añadir Conductor</button>
-      </div>
-      <div class="card">
-        <div class="search-bar"><input id="search_conductores" placeholder="Buscar..." oninput="filterTable('conductores')"></div>
-        <div class="table-wrapper">
-          <table><thead><tr><th>Nombre</th><th>Teléfono</th><th>Licencia</th><th>Estado</th><th></th></tr></thead>
-          <tbody id="tbody_conductores"></tbody></table>
+        <div class="card">
+          <div class="card-body" style="padding-bottom:0">
+            <input id="s_cosecheros" placeholder="Buscar..." style="max-width:250px;margin-bottom:12px" oninput="filterTable('cosecheros')">
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Finca</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="tbody_cosecheros"></tbody></table>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- CAMARAS -->
-    <div id="tab-camaras" class="tab-content">
-      <div class="card">
-        <h2 style="margin-bottom:16px">Nueva Cámara</h2>
-        <div class="form-row">
-          <div class="form-group"><label>Nombre *</label><input id="cam_nombre" placeholder="Ej: Cámara 1"></div>
-          <div class="form-group"><label>Capacidad (kg)</label><input id="cam_capacidad" type="number" placeholder="0"></div>
-          <div class="form-group"><label>Temperatura objetivo (°C)</label><input id="cam_temp" type="number" placeholder="13"></div>
+      <!-- CLIENTES -->
+      <div id="tab-clientes" class="tab-content">
+        <div class="card">
+          <div class="card-header"><h3>Nuevo Cliente</h3></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group"><label>Nombre *</label><input id="cl_nombre"></div>
+              <div class="form-group"><label>Email</label><input id="cl_email" type="email"></div>
+              <div class="form-group"><label>Tipo</label><select id="cl_tipo"><option value="supermercado">Supermercado</option><option value="mayorista">Mayorista</option><option value="directo">Directo</option></select></div>
+            </div>
+            <button class="btn btn-primary" onclick="saveCliente()">+ Añadir</button>
+          </div>
         </div>
-        <button class="btn btn-primary" onclick="saveCamara()">+ Añadir Cámara</button>
-      </div>
-      <div class="card">
-        <div class="table-wrapper">
-          <table><thead><tr><th>Nombre</th><th>Capacidad</th><th>Temperatura</th><th></th></tr></thead>
-          <tbody id="tbody_camaras"></tbody></table>
+        <div class="card">
+          <div class="table-wrap">
+            <table><thead><tr><th>Nombre</th><th>Email</th><th>Tipo</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="tbody_clientes"></tbody></table>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- TARIFAS -->
-    <div id="tab-tarifas" class="tab-content">
-      <div class="card">
-        <p style="font-size:13px;color:var(--gris-texto);margin-bottom:16px">Precio por kilo para cada categoría. Se aplica a todas las liquidaciones.</p>
-        <div id="tarifas_form"></div>
-        <button class="btn btn-primary" onclick="saveTarifas()">Guardar Tarifas</button>
+      <!-- CONDUCTORES -->
+      <div id="tab-conductores" class="tab-content">
+        <div class="card">
+          <div class="card-header"><h3>Nuevo Conductor</h3></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group"><label>Nombre *</label><input id="co_nombre"></div>
+              <div class="form-group"><label>Teléfono</label><input id="co_telefono"></div>
+              <div class="form-group"><label>Licencia</label><input id="co_licencia"></div>
+            </div>
+            <button class="btn btn-primary" onclick="saveConductor()">+ Añadir</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table><thead><tr><th>Nombre</th><th>Teléfono</th><th>Licencia</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="tbody_conductores"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAMARAS -->
+      <div id="tab-camaras" class="tab-content">
+        <div class="card">
+          <div class="card-header"><h3>Nueva Cámara</h3></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group"><label>Nombre *</label><input id="cam_nombre" placeholder="Ej: Cámara 1"></div>
+              <div class="form-group"><label>Capacidad (kg)</label><input id="cam_capacidad" type="number"></div>
+              <div class="form-group"><label>Temperatura (°C)</label><input id="cam_temp" type="number" placeholder="13"></div>
+            </div>
+            <button class="btn btn-primary" onclick="saveCamara()">+ Añadir</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table><thead><tr><th>Nombre</th><th>Capacidad</th><th>Temperatura</th><th></th></tr></thead>
+            <tbody id="tbody_camaras"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TARIFAS -->
+      <div id="tab-tarifas" class="tab-content">
+        <div class="card">
+          <div class="card-header"><h3>Precio por kg según categoría</h3></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--subtexto);margin-bottom:16px">Estas tarifas se aplican al calcular las liquidaciones de los cosecheros.</p>
+            <div id="tarifas_form"></div>
+            <button class="btn btn-primary" onclick="saveTarifas()">Guardar tarifas</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL EDITAR -->
+  <!-- MODAL -->
   <div id="modal" class="modal-overlay">
     <div class="modal">
-      <div class="modal-header">
-        <h2 id="modal_title">Editar</h2>
-        <button class="modal-close" onclick="closeModal()">✕</button>
-      </div>
+      <div class="modal-header"><h2 id="modal_title">Editar</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
       <div id="modal_body"></div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
@@ -178,313 +170,222 @@
     </div>
   </div>
 
+  <div id="loading"><div class="spinner"></div></div>
+
   <script src="../assets/js/supabase.js"></script>
+  <script src="../assets/js/auth.js"></script>
   <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/layout.js"></script>
   <script>
     let data = { fincas:[], cosecheros:[], clientes:[], conductores:[], camaras:[], tarifas:[] };
-    let modalFn = null;
-    let editId = null;
+    let modalFn = null, editId = null;
 
     async function init() {
+      renderSidebar('maestros');
       showLoading(true);
       await Promise.all([loadFincas(), loadCosecheros(), loadClientes(), loadConductores(), loadCamaras(), loadTarifas()]);
       showLoading(false);
     }
 
-    function showTab(name) {
+    function showTab(name, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
       document.getElementById('tab-' + name).classList.add('active');
-      event.target.classList.add('active');
+      btn.classList.add('active');
     }
 
     function filterTable(type) {
-      const q = document.getElementById('search_' + type).value.toLowerCase();
-      const rows = document.querySelectorAll(`#tbody_${type} tr`);
-      rows.forEach(r => r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none');
+      const q = document.getElementById('s_' + type).value.toLowerCase();
+      document.querySelectorAll(`#tbody_${type} tr`).forEach(r => r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none');
     }
 
     function closeModal() { document.getElementById('modal').classList.remove('open'); }
-    function openModal(title, bodyHtml, saveFn) {
+    function openModal(title, bodyHtml, fn) {
       document.getElementById('modal_title').textContent = title;
       document.getElementById('modal_body').innerHTML = bodyHtml;
-      modalFn = saveFn;
+      modalFn = fn;
       document.getElementById('modal').classList.add('open');
     }
     function modalSave() { if (modalFn) modalFn(); }
 
-    // ---- FINCAS ----
     async function loadFincas() {
       const { data: rows } = await sb.from('fincas').select('*').order('nombre');
       data.fincas = rows || [];
-      renderFincas();
-      // actualizar select cosecheros
       const sel = document.getElementById('c_finca_id');
       sel.innerHTML = '<option value="">— Sin finca —</option>';
       data.fincas.forEach(f => sel.innerHTML += `<option value="${f.id}">${f.nombre}</option>`);
-    }
-
-    function renderFincas() {
       document.getElementById('tbody_fincas').innerHTML = data.fincas.map(f => `
         <tr>
-          <td><strong>${f.nombre}</strong></td>
-          <td>${f.ubicacion || '—'}</td>
-          <td>${f.propietario || '—'}</td>
-          <td>${f.activa ? '<span class="badge badge-aprobada">Activa</span>' : '<span class="badge badge-pendiente">Inactiva</span>'}</td>
-          <td class="actions">
-            <button class="btn btn-sm btn-secondary" onclick="editFinca('${f.id}')">Editar</button>
-            <button class="btn btn-sm btn-danger" onclick="toggleActiva('fincas','${f.id}',${f.activa})">${f.activa ? 'Desactivar' : 'Activar'}</button>
-          </td>
-        </tr>`).join('') || '<tr><td colspan="5" class="empty-state"><p>Sin fincas registradas</p></td></tr>';
+          <td><strong>${f.nombre}</strong></td><td>${f.ubicacion||'—'}</td><td>${f.propietario||'—'}</td>
+          <td>${f.activa ? '<span class="badge badge-verde">Activa</span>' : '<span class="badge badge-gris">Inactiva</span>'}</td>
+          <td><button class="btn btn-sm btn-secondary" onclick="editFinca('${f.id}')">Editar</button></td>
+        </tr>`).join('') || '<tr><td colspan="5" class="empty"><p>Sin fincas</p></td></tr>';
     }
 
     async function saveFinca() {
       const nombre = document.getElementById('f_nombre').value.trim();
       if (!nombre) { showAlert('El nombre es obligatorio', 'error'); return; }
       showLoading(true);
-      const { error } = await sb.from('fincas').insert({ nombre, ubicacion: document.getElementById('f_ubicacion').value, propietario: document.getElementById('f_propietario').value });
-      showLoading(false);
-      if (error) { showAlert('Error: ' + error.message, 'error'); return; }
-      document.getElementById('f_nombre').value = '';
-      document.getElementById('f_ubicacion').value = '';
-      document.getElementById('f_propietario').value = '';
+      await sb.from('fincas').insert({ nombre, ubicacion: document.getElementById('f_ubicacion').value, propietario: document.getElementById('f_propietario').value });
+      ['f_nombre','f_ubicacion','f_propietario'].forEach(id => document.getElementById(id).value = '');
       showAlert('Finca añadida');
       await loadFincas();
+      showLoading(false);
     }
 
     function editFinca(id) {
-      const f = data.fincas.find(x => x.id === id);
-      editId = id;
+      const f = data.fincas.find(x => x.id === id); editId = id;
       openModal('Editar Finca', `
         <div class="form-group"><label>Nombre *</label><input id="e_nombre" value="${f.nombre}"></div>
         <div class="form-group"><label>Ubicación</label><input id="e_ubicacion" value="${f.ubicacion||''}"></div>
         <div class="form-group"><label>Propietario</label><input id="e_propietario" value="${f.propietario||''}"></div>
       `, async () => {
-        const { error } = await sb.from('fincas').update({ nombre: document.getElementById('e_nombre').value, ubicacion: document.getElementById('e_ubicacion').value, propietario: document.getElementById('e_propietario').value }).eq('id', editId);
-        if (!error) { closeModal(); showAlert('Guardado'); await loadFincas(); }
+        await sb.from('fincas').update({ nombre: document.getElementById('e_nombre').value, ubicacion: document.getElementById('e_ubicacion').value, propietario: document.getElementById('e_propietario').value }).eq('id', editId);
+        closeModal(); showAlert('Guardado'); await loadFincas();
       });
     }
 
-    // ---- COSECHEROS ----
     async function loadCosecheros() {
       const { data: rows } = await sb.from('cosecheros').select('*, fincas(nombre)').order('nombre');
       data.cosecheros = rows || [];
-      renderCosecheros();
-    }
-
-    function renderCosecheros() {
       document.getElementById('tbody_cosecheros').innerHTML = data.cosecheros.map(c => `
         <tr>
-          <td><strong>${c.nombre}</strong></td>
-          <td>${c.email || '—'}</td>
-          <td>${c.telefono || '—'}</td>
-          <td>${c.fincas?.nombre || '—'}</td>
-          <td>${c.activo ? '<span class="badge badge-aprobada">Activo</span>' : '<span class="badge badge-pendiente">Inactivo</span>'}</td>
-          <td class="actions">
-            <button class="btn btn-sm btn-secondary" onclick="editCosechero('${c.id}')">Editar</button>
-            <button class="btn btn-sm btn-danger" onclick="toggleActiva('cosecheros','${c.id}',${c.activo},'activo')">${c.activo ? 'Desactivar' : 'Activar'}</button>
-          </td>
-        </tr>`).join('') || '<tr><td colspan="6" class="empty-state"><p>Sin cosecheros registrados</p></td></tr>';
+          <td><strong>${c.nombre}</strong></td><td>${c.email||'—'}</td><td>${c.telefono||'—'}</td>
+          <td>${c.fincas?.nombre||'—'}</td>
+          <td>${c.activo ? '<span class="badge badge-verde">Activo</span>' : '<span class="badge badge-gris">Inactivo</span>'}</td>
+          <td><button class="btn btn-sm btn-secondary" onclick="editCosechero('${c.id}')">Editar</button></td>
+        </tr>`).join('') || '<tr><td colspan="6" class="empty"><p>Sin cosecheros</p></td></tr>';
     }
 
     async function saveCosechero() {
       const nombre = document.getElementById('c_nombre').value.trim();
       if (!nombre) { showAlert('El nombre es obligatorio', 'error'); return; }
       showLoading(true);
-      const { error } = await sb.from('cosecheros').insert({ nombre, email: document.getElementById('c_email').value, telefono: document.getElementById('c_telefono').value, finca_id: document.getElementById('c_finca_id').value || null, iban: document.getElementById('c_iban').value });
-      showLoading(false);
-      if (error) { showAlert('Error: ' + error.message, 'error'); return; }
-      ['c_nombre','c_email','c_telefono','c_iban'].forEach(id => document.getElementById(id).value = '');
-      showAlert('Cosechero añadido');
-      await loadCosecheros();
+      await sb.from('cosecheros').insert({ nombre, email: document.getElementById('c_email').value, telefono: document.getElementById('c_telefono').value, finca_id: document.getElementById('c_finca_id').value||null, iban: document.getElementById('c_iban').value });
+      ['c_nombre','c_email','c_telefono','c_iban'].forEach(id => document.getElementById(id).value='');
+      showAlert('Cosechero añadido'); await loadCosecheros(); showLoading(false);
     }
 
     function editCosechero(id) {
-      const c = data.cosecheros.find(x => x.id === id);
-      editId = id;
+      const c = data.cosecheros.find(x => x.id === id); editId = id;
       const opts = data.fincas.map(f => `<option value="${f.id}" ${c.finca_id===f.id?'selected':''}>${f.nombre}</option>`).join('');
       openModal('Editar Cosechero', `
         <div class="form-group"><label>Nombre *</label><input id="e_nombre" value="${c.nombre}"></div>
         <div class="form-group"><label>Email</label><input id="e_email" value="${c.email||''}"></div>
         <div class="form-group"><label>Teléfono</label><input id="e_telefono" value="${c.telefono||''}"></div>
-        <div class="form-group"><label>Finca</label><select id="e_finca_id"><option value="">— Sin finca —</option>${opts}</select></div>
+        <div class="form-group"><label>Finca</label><select id="e_finca"><option value="">—</option>${opts}</select></div>
         <div class="form-group"><label>IBAN</label><input id="e_iban" value="${c.iban||''}"></div>
       `, async () => {
-        const { error } = await sb.from('cosecheros').update({ nombre: document.getElementById('e_nombre').value, email: document.getElementById('e_email').value, telefono: document.getElementById('e_telefono').value, finca_id: document.getElementById('e_finca_id').value || null, iban: document.getElementById('e_iban').value }).eq('id', editId);
-        if (!error) { closeModal(); showAlert('Guardado'); await loadCosecheros(); }
+        await sb.from('cosecheros').update({ nombre: document.getElementById('e_nombre').value, email: document.getElementById('e_email').value, telefono: document.getElementById('e_telefono').value, finca_id: document.getElementById('e_finca').value||null, iban: document.getElementById('e_iban').value }).eq('id', editId);
+        closeModal(); showAlert('Guardado'); await loadCosecheros();
       });
     }
 
-    // ---- CLIENTES ----
     async function loadClientes() {
       const { data: rows } = await sb.from('clientes').select('*').order('nombre');
       data.clientes = rows || [];
-      renderClientes();
-    }
-
-    function renderClientes() {
       document.getElementById('tbody_clientes').innerHTML = data.clientes.map(c => `
-        <tr>
-          <td><strong>${c.nombre}</strong></td>
-          <td>${c.email || '—'}</td>
-          <td><span class="badge badge-confirmado">${c.tipo}</span></td>
-          <td>${c.activo ? '<span class="badge badge-aprobada">Activo</span>' : '<span class="badge badge-pendiente">Inactivo</span>'}</td>
-          <td class="actions">
-            <button class="btn btn-sm btn-secondary" onclick="editCliente('${c.id}')">Editar</button>
-          </td>
-        </tr>`).join('') || '<tr><td colspan="5" class="empty-state"><p>Sin clientes registrados</p></td></tr>';
+        <tr><td><strong>${c.nombre}</strong></td><td>${c.email||'—'}</td><td><span class="badge badge-azul">${c.tipo}</span></td>
+        <td>${c.activo?'<span class="badge badge-verde">Activo</span>':'<span class="badge badge-gris">Inactivo</span>'}</td>
+        <td><button class="btn btn-sm btn-secondary" onclick="editCliente('${c.id}')">Editar</button></td></tr>`).join('') || '<tr><td colspan="5" class="empty"><p>Sin clientes</p></td></tr>';
     }
 
     async function saveCliente() {
       const nombre = document.getElementById('cl_nombre').value.trim();
       if (!nombre) { showAlert('El nombre es obligatorio', 'error'); return; }
-      showLoading(true);
-      const { error } = await sb.from('clientes').insert({ nombre, email: document.getElementById('cl_email').value, tipo: document.getElementById('cl_tipo').value });
-      showLoading(false);
-      if (error) { showAlert('Error: ' + error.message, 'error'); return; }
-      document.getElementById('cl_nombre').value = '';
-      document.getElementById('cl_email').value = '';
-      showAlert('Cliente añadido');
-      await loadClientes();
+      await sb.from('clientes').insert({ nombre, email: document.getElementById('cl_email').value, tipo: document.getElementById('cl_tipo').value });
+      document.getElementById('cl_nombre').value=''; document.getElementById('cl_email').value='';
+      showAlert('Cliente añadido'); await loadClientes();
     }
 
     function editCliente(id) {
-      const c = data.clientes.find(x => x.id === id);
-      editId = id;
+      const c = data.clientes.find(x => x.id === id); editId = id;
       openModal('Editar Cliente', `
         <div class="form-group"><label>Nombre *</label><input id="e_nombre" value="${c.nombre}"></div>
         <div class="form-group"><label>Email</label><input id="e_email" value="${c.email||''}"></div>
         <div class="form-group"><label>Tipo</label><select id="e_tipo"><option value="supermercado" ${c.tipo==='supermercado'?'selected':''}>Supermercado</option><option value="mayorista" ${c.tipo==='mayorista'?'selected':''}>Mayorista</option><option value="directo" ${c.tipo==='directo'?'selected':''}>Directo</option></select></div>
       `, async () => {
-        const { error } = await sb.from('clientes').update({ nombre: document.getElementById('e_nombre').value, email: document.getElementById('e_email').value, tipo: document.getElementById('e_tipo').value }).eq('id', editId);
-        if (!error) { closeModal(); showAlert('Guardado'); await loadClientes(); }
+        await sb.from('clientes').update({ nombre: document.getElementById('e_nombre').value, email: document.getElementById('e_email').value, tipo: document.getElementById('e_tipo').value }).eq('id', editId);
+        closeModal(); showAlert('Guardado'); await loadClientes();
       });
     }
 
-    // ---- CONDUCTORES ----
     async function loadConductores() {
       const { data: rows } = await sb.from('conductores').select('*').order('nombre');
       data.conductores = rows || [];
-      renderConductores();
-    }
-
-    function renderConductores() {
       document.getElementById('tbody_conductores').innerHTML = data.conductores.map(c => `
-        <tr>
-          <td><strong>${c.nombre}</strong></td>
-          <td>${c.telefono || '—'}</td>
-          <td>${c.licencia || '—'}</td>
-          <td>${c.activo ? '<span class="badge badge-aprobada">Activo</span>' : '<span class="badge badge-pendiente">Inactivo</span>'}</td>
-          <td class="actions">
-            <button class="btn btn-sm btn-secondary" onclick="editConductor('${c.id}')">Editar</button>
-          </td>
-        </tr>`).join('') || '<tr><td colspan="5" class="empty-state"><p>Sin conductores registrados</p></td></tr>';
+        <tr><td><strong>${c.nombre}</strong></td><td>${c.telefono||'—'}</td><td>${c.licencia||'—'}</td>
+        <td>${c.activo?'<span class="badge badge-verde">Activo</span>':'<span class="badge badge-gris">Inactivo</span>'}</td>
+        <td><button class="btn btn-sm btn-secondary" onclick="editConductor('${c.id}')">Editar</button></td></tr>`).join('') || '<tr><td colspan="5" class="empty"><p>Sin conductores</p></td></tr>';
     }
 
     async function saveConductor() {
       const nombre = document.getElementById('co_nombre').value.trim();
-      if (!nombre) { showAlert('El nombre es obligatorio', 'error'); return; }
-      showLoading(true);
-      const { error } = await sb.from('conductores').insert({ nombre, telefono: document.getElementById('co_telefono').value, licencia: document.getElementById('co_licencia').value });
-      showLoading(false);
-      if (error) { showAlert('Error: ' + error.message, 'error'); return; }
-      ['co_nombre','co_telefono','co_licencia'].forEach(id => document.getElementById(id).value = '');
-      showAlert('Conductor añadido');
-      await loadConductores();
+      if (!nombre) { showAlert('Nombre obligatorio', 'error'); return; }
+      await sb.from('conductores').insert({ nombre, telefono: document.getElementById('co_telefono').value, licencia: document.getElementById('co_licencia').value });
+      ['co_nombre','co_telefono','co_licencia'].forEach(id => document.getElementById(id).value='');
+      showAlert('Conductor añadido'); await loadConductores();
     }
 
     function editConductor(id) {
-      const c = data.conductores.find(x => x.id === id);
-      editId = id;
+      const c = data.conductores.find(x => x.id === id); editId = id;
       openModal('Editar Conductor', `
         <div class="form-group"><label>Nombre *</label><input id="e_nombre" value="${c.nombre}"></div>
         <div class="form-group"><label>Teléfono</label><input id="e_telefono" value="${c.telefono||''}"></div>
         <div class="form-group"><label>Licencia</label><input id="e_licencia" value="${c.licencia||''}"></div>
       `, async () => {
-        const { error } = await sb.from('conductores').update({ nombre: document.getElementById('e_nombre').value, telefono: document.getElementById('e_telefono').value, licencia: document.getElementById('e_licencia').value }).eq('id', editId);
-        if (!error) { closeModal(); showAlert('Guardado'); await loadConductores(); }
+        await sb.from('conductores').update({ nombre: document.getElementById('e_nombre').value, telefono: document.getElementById('e_telefono').value, licencia: document.getElementById('e_licencia').value }).eq('id', editId);
+        closeModal(); showAlert('Guardado'); await loadConductores();
       });
     }
 
-    // ---- CAMARAS ----
     async function loadCamaras() {
       const { data: rows } = await sb.from('camaras').select('*').order('nombre');
       data.camaras = rows || [];
-      renderCamaras();
-    }
-
-    function renderCamaras() {
       document.getElementById('tbody_camaras').innerHTML = data.camaras.map(c => `
-        <tr>
-          <td><strong>${c.nombre}</strong></td>
-          <td>${c.capacidad_kg ? c.capacidad_kg.toLocaleString('es-ES') + ' kg' : '—'}</td>
-          <td>${c.temperatura_objetivo ? c.temperatura_objetivo + ' °C' : '—'}</td>
-          <td class="actions">
-            <button class="btn btn-sm btn-secondary" onclick="editCamara('${c.id}')">Editar</button>
-          </td>
-        </tr>`).join('') || '<tr><td colspan="4" class="empty-state"><p>Sin cámaras registradas</p></td></tr>';
+        <tr><td><strong>${c.nombre}</strong></td><td>${c.capacidad_kg?c.capacidad_kg.toLocaleString('es-ES')+' kg':'—'}</td><td>${c.temperatura_objetivo?c.temperatura_objetivo+' °C':'—'}</td>
+        <td><button class="btn btn-sm btn-secondary" onclick="editCamara('${c.id}')">Editar</button></td></tr>`).join('') || '<tr><td colspan="4" class="empty"><p>Sin cámaras</p></td></tr>';
     }
 
     async function saveCamara() {
       const nombre = document.getElementById('cam_nombre').value.trim();
-      if (!nombre) { showAlert('El nombre es obligatorio', 'error'); return; }
-      showLoading(true);
-      const { error } = await sb.from('camaras').insert({ nombre, capacidad_kg: document.getElementById('cam_capacidad').value || null, temperatura_objetivo: document.getElementById('cam_temp').value || null });
-      showLoading(false);
-      if (error) { showAlert('Error: ' + error.message, 'error'); return; }
-      ['cam_nombre','cam_capacidad','cam_temp'].forEach(id => document.getElementById(id).value = '');
-      showAlert('Cámara añadida');
-      await loadCamaras();
+      if (!nombre) { showAlert('Nombre obligatorio', 'error'); return; }
+      await sb.from('camaras').insert({ nombre, capacidad_kg: document.getElementById('cam_capacidad').value||null, temperatura_objetivo: document.getElementById('cam_temp').value||null });
+      ['cam_nombre','cam_capacidad','cam_temp'].forEach(id => document.getElementById(id).value='');
+      showAlert('Cámara añadida'); await loadCamaras();
     }
 
     function editCamara(id) {
-      const c = data.camaras.find(x => x.id === id);
-      editId = id;
+      const c = data.camaras.find(x => x.id === id); editId = id;
       openModal('Editar Cámara', `
         <div class="form-group"><label>Nombre *</label><input id="e_nombre" value="${c.nombre}"></div>
-        <div class="form-group"><label>Capacidad (kg)</label><input id="e_capacidad" type="number" value="${c.capacidad_kg||''}"></div>
+        <div class="form-group"><label>Capacidad (kg)</label><input id="e_cap" type="number" value="${c.capacidad_kg||''}"></div>
         <div class="form-group"><label>Temperatura (°C)</label><input id="e_temp" type="number" value="${c.temperatura_objetivo||''}"></div>
       `, async () => {
-        const { error } = await sb.from('camaras').update({ nombre: document.getElementById('e_nombre').value, capacidad_kg: document.getElementById('e_capacidad').value || null, temperatura_objetivo: document.getElementById('e_temp').value || null }).eq('id', editId);
-        if (!error) { closeModal(); showAlert('Guardado'); await loadCamaras(); }
+        await sb.from('camaras').update({ nombre: document.getElementById('e_nombre').value, capacidad_kg: document.getElementById('e_cap').value||null, temperatura_objetivo: document.getElementById('e_temp').value||null }).eq('id', editId);
+        closeModal(); showAlert('Guardado'); await loadCamaras();
       });
     }
 
-    // ---- TARIFAS ----
     async function loadTarifas() {
       const { data: rows } = await sb.from('tarifas').select('*').order('categoria');
       data.tarifas = rows || [];
-      renderTarifas();
-    }
-
-    function renderTarifas() {
-      const nombres = { extra:'Extra', mercadona:'Mercadona', primera:'Primera', segunda:'Segunda', desecho:'Desecho', dedos:'Dedos' };
+      const nombres = { extra:'Extra (10 kg)', mercadona:'Mercadona (16-17 kg)', primera:'Primera (18 kg)', segunda:'Segunda (10 kg)', desecho:'Desecho', dedos:'Dedos' };
       document.getElementById('tarifas_form').innerHTML = data.tarifas.map(t => `
         <div class="form-row" style="margin-bottom:8px;align-items:center">
-          <div><label>${nombres[t.categoria] || t.categoria}</label></div>
-          <div class="form-group" style="margin:0">
-            <input type="number" id="tarifa_${t.id}" value="${t.precio_kg}" step="0.01" min="0" placeholder="€/kg">
-          </div>
-          <div style="font-size:13px;color:var(--gris-texto)">€ / kg</div>
+          <label style="margin:0">${nombres[t.categoria]||t.categoria}</label>
+          <input type="number" id="tarifa_${t.id}" value="${t.precio_kg}" step="0.01" min="0" style="max-width:120px">
+          <span style="font-size:13px;color:var(--subtexto)">€ / kg</span>
         </div>`).join('');
     }
 
     async function saveTarifas() {
       showLoading(true);
       for (const t of data.tarifas) {
-        const val = parseFloat(document.getElementById('tarifa_' + t.id).value) || 0;
-        await sb.from('tarifas').update({ precio_kg: val }).eq('id', t.id);
+        await sb.from('tarifas').update({ precio_kg: parseFloat(document.getElementById('tarifa_'+t.id).value)||0 }).eq('id', t.id);
       }
       showLoading(false);
       showAlert('Tarifas guardadas');
-      await loadTarifas();
-    }
-
-    // ---- TOGGLE ACTIVO ----
-    async function toggleActiva(table, id, current, field = 'activa') {
-      await sb.from(table).update({ [field]: !current }).eq('id', id);
-      if (table === 'fincas') await loadFincas();
-      if (table === 'cosecheros') await loadCosecheros();
     }
 
     init();
