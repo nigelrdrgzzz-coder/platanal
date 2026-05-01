@@ -4,140 +4,151 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Recepción — Platanal</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
-  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:20px; }
-    .stat { background:white; border-radius:var(--radius); padding:16px; box-shadow:var(--shadow); border-left:4px solid var(--verde); }
-    .stat-val { font-size:22px; font-weight:700; color:var(--verde); }
-    .stat-lbl { font-size:11px; text-transform:uppercase; color:var(--gris-texto); font-weight:600; margin-top:2px; }
+    .marca-card {
+      background: white;
+      border-radius: var(--radio);
+      border: 1px solid var(--gris2);
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: box-shadow 0.15s;
+      cursor: pointer;
+    }
+    .marca-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .marca-card.pendiente { border-left: 4px solid var(--naranja); }
+    .marca-card.verificada { border-left: 4px solid var(--verde-ok); }
+    .marca-card.enviada { border-left: 4px solid var(--azul); }
+    .marca-num { font-size: 18px; font-weight: 800; color: var(--verde); min-width: 100px; }
+    .marca-info { flex: 1; }
+    .marca-info strong { font-size: 14px; display: block; }
+    .marca-info span { font-size: 12px; color: var(--subtexto); }
+    .marca-kg { text-align: right; min-width: 100px; }
+    .marca-kg strong { font-size: 16px; display: block; }
+    .marca-kg span { font-size: 11px; color: var(--subtexto); }
+    .marca-actions { display: flex; gap: 8px; align-items: center; }
+    .btn-verificar { background: var(--verde-ok); color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
+    .btn-ver { background: var(--gris2); color: var(--texto); padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
+    .filtros { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filtro-btn { padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1.5px solid var(--gris2); background: white; cursor: pointer; color: var(--subtexto); transition: all 0.15s; }
+    .filtro-btn.active { background: var(--verde); color: white; border-color: var(--verde); }
   </style>
 </head>
 <body>
-  <nav>
-    <a href="../maestros/index.html" class="logo">🍌 Platanal</a>
-    <a href="../maestros/index.html">Maestros</a>
-    <a href="index.html" class="active">Recepción</a>
-    <a href="../calidad/index.html">Calidad</a>
-    <span style="margin-left:auto;color:rgba(255,255,255,0.7);font-size:13px">Nigel — Gerente</span>
-  </nav>
-
-  <div id="loading"><div class="spinner"></div></div>
-
-  <div class="container">
-    <div class="page-header">
-      <h1>Recepción de Fruta</h1>
-      <a href="nuevo.html" class="btn btn-primary">+ Nueva recepción</a>
-    </div>
-    <div id="alert"></div>
-
-    <!-- KPIs DEL DÍA -->
-    <div class="stats">
-      <div class="stat"><div class="stat-val" id="kpi_hoy">0</div><div class="stat-lbl">Albaranes hoy</div></div>
-      <div class="stat"><div class="stat-val" id="kpi_kg">0</div><div class="stat-lbl">Kg hoy</div></div>
-      <div class="stat"><div class="stat-val" id="kpi_pendientes">0</div><div class="stat-lbl">Pendientes calidad</div></div>
-      <div class="stat"><div class="stat-val" id="kpi_semana">0</div><div class="stat-lbl">Albaranes semana</div></div>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>Recepción de Fruta</h2>
+        <div class="topbar-sub" id="fecha"></div>
+      </div>
+      <div class="topbar-right">
+        <a href="nuevo.html" class="btn btn-primary">+ Nueva recepción</a>
+      </div>
     </div>
 
-    <!-- FILTROS -->
-    <div class="card">
-      <div class="search-bar">
-        <input id="search" placeholder="Buscar finca o cosechero..." oninput="filtrar()" style="max-width:300px">
-        <select id="filtro_estado" onchange="filtrar()">
-          <option value="">Todos los estados</option>
-          <option value="confirmado">Confirmado</option>
-          <option value="inspeccionado">Inspeccionado</option>
-          <option value="liquidado">Liquidado</option>
-        </select>
-        <input type="date" id="filtro_fecha" onchange="filtrar()">
+    <div class="content">
+      <div id="alert"></div>
+
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="kpi verde"><div class="kpi-icon">📥</div><div class="kpi-val" id="k_hoy">—</div><div class="kpi-lbl">Albaranes hoy</div></div>
+        <div class="kpi amarillo"><div class="kpi-icon">⚖️</div><div class="kpi-val" id="k_kg">—</div><div class="kpi-lbl">Kg recibidos hoy</div></div>
+        <div class="kpi rojo"><div class="kpi-icon">⏳</div><div class="kpi-val" id="k_pend">—</div><div class="kpi-lbl">Pendientes verificar</div></div>
+        <div class="kpi azul"><div class="kpi-icon">✅</div><div class="kpi-val" id="k_env">—</div><div class="kpi-lbl">Enviados hoy</div></div>
       </div>
 
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Nº Albarán</th>
-              <th>Fecha</th>
-              <th>Semana</th>
-              <th>Finca</th>
-              <th>Cosechero</th>
-              <th>Racimos</th>
-              <th>Kg Total</th>
-              <th>Estado</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
+      <div class="filtros">
+        <button class="filtro-btn active" onclick="filtrar('todos',this)">Todos</button>
+        <button class="filtro-btn" onclick="filtrar('confirmado',this)">⏳ Pendientes</button>
+        <button class="filtro-btn" onclick="filtrar('inspeccionado',this)">✅ Verificados</button>
+        <button class="filtro-btn" onclick="filtrar('liquidado',this)">📧 Enviados</button>
+        <input id="buscar" placeholder="Buscar finca o albarán..." style="max-width:220px;padding:7px 12px;border-radius:20px;border:1.5px solid var(--gris2);font-size:13px" oninput="buscar()">
       </div>
+
+      <div id="lista_marcas"></div>
     </div>
   </div>
 
+  <div id="loading"><div class="spinner"></div></div>
+
   <script src="../assets/js/supabase.js"></script>
+  <script src="../assets/js/auth.js"></script>
   <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/layout.js"></script>
   <script>
-    let albaranes = [];
+    let albaranes = [], filtroActivo = 'todos';
 
     async function init() {
+      renderSidebar('recepcion');
+      document.getElementById('fecha').textContent = getToday();
       showLoading(true);
-      const { data, error } = await sb.from('albaranes_entrada')
-        .select('*, fincas(nombre), cosecheros(nombre)')
+      const { data } = await sb.from('albaranes_entrada')
+        .select('*, fincas(nombre), cosecheros(nombre, email)')
         .order('created_at', { ascending: false });
+      albaranes = data || [];
       showLoading(false);
 
-      if (error) { document.getElementById('tbody').innerHTML = `<tr><td colspan="9" style="text-align:center;color:red;padding:20px">Error: ${error.message}</td></tr>`; return; }
-
-      albaranes = data || [];
-      calcKpis();
-      renderTabla(albaranes);
-    }
-
-    function calcKpis() {
       const hoy = new Date().toISOString().split('T')[0];
-      const semana = Math.ceil((new Date() - new Date(new Date().getFullYear(), 0, 1)) / 604800000);
       const deHoy = albaranes.filter(a => a.fecha === hoy);
-      const deSemana = albaranes.filter(a => a.semana == semana);
-      const pendientes = albaranes.filter(a => a.estado === 'confirmado');
+      document.getElementById('k_hoy').textContent = deHoy.length;
+      document.getElementById('k_kg').textContent = deHoy.reduce((s,a) => s+(a.kg_total||0), 0).toLocaleString('es-ES') + ' kg';
+      document.getElementById('k_pend').textContent = albaranes.filter(a => a.estado === 'confirmado').length;
+      document.getElementById('k_env').textContent = albaranes.filter(a => a.fecha === hoy && a.estado === 'liquidado').length;
 
-      document.getElementById('kpi_hoy').textContent = deHoy.length;
-      document.getElementById('kpi_kg').textContent = deHoy.reduce((s,a) => s + (a.kg_total||0), 0).toLocaleString('es-ES');
-      document.getElementById('kpi_pendientes').textContent = pendientes.length;
-      document.getElementById('kpi_semana').textContent = deSemana.length;
+      renderLista(albaranes);
     }
 
-    function renderTabla(rows) {
-      if (!rows.length) {
-        document.getElementById('tbody').innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#6c757d">No hay albaranes registrados</td></tr>';
+    function renderLista(lista) {
+      if (!lista.length) {
+        document.getElementById('lista_marcas').innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>No hay albaranes registrados</p></div>';
         return;
       }
-      document.getElementById('tbody').innerHTML = rows.map(a => `
-        <tr>
-          <td><strong>${a.numero}</strong></td>
-          <td>${formatDate(a.fecha)}</td>
-          <td>${a.semana || '—'}</td>
-          <td>${a.fincas?.nombre || '—'}</td>
-          <td>${a.cosecheros?.nombre || '—'}</td>
-          <td>${a.racimos || '—'}</td>
-          <td><strong>${(a.kg_total||0).toLocaleString('es-ES')} kg</strong></td>
-          <td>${badgeEstado(a.estado)}</td>
-          <td>
-            <a href="detalle.html?id=${a.id}" class="btn btn-sm btn-secondary">Ver</a>
-            ${a.estado === 'confirmado' ? `<a href="../calidad/inspeccion.html?id=${a.id}" class="btn btn-sm btn-primary">Inspeccionar</a>` : ''}
-          </td>
-        </tr>`).join('');
+      document.getElementById('lista_marcas').innerHTML = lista.map(a => `
+        <div class="marca-card ${a.estado === 'confirmado' ? 'pendiente' : a.estado === 'inspeccionado' ? 'verificada' : 'enviada'}" onclick="window.location='detalle.html?id=${a.id}'">
+          <div class="marca-num">${a.numero}</div>
+          <div class="marca-info">
+            <strong>${a.fincas?.nombre || '—'}</strong>
+            <span>${a.cosecheros?.nombre || '—'} · ${formatDate(a.fecha)} · Semana ${a.semana || '—'} · ${a.racimos || 0} racimos</span>
+          </div>
+          <div class="marca-kg">
+            <strong>${(a.kg_total||0).toLocaleString('es-ES')} kg</strong>
+            <span>Peso medio: ${a.peso_medio ? Number(a.peso_medio).toFixed(3) : '—'}</span>
+          </div>
+          <div class="marca-actions" onclick="event.stopPropagation()">
+            ${a.estado === 'confirmado' ? `
+              <button class="btn-verificar" onclick="irVerificar('${a.id}')">✓ Verificar</button>
+            ` : a.estado === 'inspeccionado' ? `
+              <span class="badge badge-verde">✓ Verificado</span>
+              <button class="btn-ver" onclick="irVerificar('${a.id}')">Ver</button>
+            ` : `
+              <span class="badge badge-azul">📧 Enviado</span>
+            `}
+          </div>
+        </div>`).join('');
     }
 
-    function filtrar() {
-      const q = document.getElementById('search').value.toLowerCase();
-      const estado = document.getElementById('filtro_estado').value;
-      const fecha = document.getElementById('filtro_fecha').value;
-      const filtrados = albaranes.filter(a => {
-        const texto = `${a.fincas?.nombre||''} ${a.cosecheros?.nombre||''} ${a.numero}`.toLowerCase();
-        return (!q || texto.includes(q)) && (!estado || a.estado === estado) && (!fecha || a.fecha === fecha);
-      });
-      renderTabla(filtrados);
+    function filtrar(estado, btn) {
+      filtroActivo = estado;
+      document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      aplicarFiltros();
     }
+
+    function buscar() { aplicarFiltros(); }
+
+    function aplicarFiltros() {
+      const q = document.getElementById('buscar').value.toLowerCase();
+      let lista = albaranes;
+      if (filtroActivo !== 'todos') lista = lista.filter(a => a.estado === filtroActivo);
+      if (q) lista = lista.filter(a => `${a.numero} ${a.fincas?.nombre||''} ${a.cosecheros?.nombre||''}`.toLowerCase().includes(q));
+      renderLista(lista);
+    }
+
+    function irVerificar(id) { window.location.href = `verificar.html?id=${id}`; }
 
     init();
   </script>

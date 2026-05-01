@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificar Albarán — Platanal</title>
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .albaran-preview {
+      border: 2px solid var(--verde);
+      border-radius: 12px;
+      padding: 24px;
+      background: white;
+      font-size: 13px;
+    }
+    .albaran-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 16px; }
+    .albaran-header h2 { font-size: 15px; font-weight: 700; }
+    .albaran-header p { font-size: 12px; color: #555; margin-top: 2px; }
+    .albaran-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .albaran-meta-item { font-size: 12px; }
+    .albaran-meta-item strong { color: var(--verde); }
+    .albaran-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 12px; }
+    .albaran-table th { background: #f5f5f5; padding: 6px 10px; text-align: left; border: 1px solid #ddd; font-weight: 600; }
+    .albaran-table td { padding: 6px 10px; border: 1px solid #ddd; text-align: right; }
+    .albaran-table td:first-child { text-align: left; }
+    .albaran-table tr.total-row td { font-weight: 700; background: #f9f9f9; }
+    .verificar-panel { position: sticky; bottom: 24px; background: white; border: 2px solid var(--gris2); border-radius: 12px; padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .verificar-info strong { font-size: 15px; display: block; }
+    .verificar-info span { font-size: 13px; color: var(--subtexto); }
+    .btn-enviar { background: var(--verde-ok); color: white; padding: 14px 32px; border-radius: 10px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .btn-enviar:hover { background: #059669; }
+    .checklist { margin-bottom: 20px; }
+    .check-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--gris2); cursor: pointer; }
+    .check-item:last-child { border-bottom: none; }
+    .check-item input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--verde); cursor: pointer; }
+    .check-item label { font-size: 13px; cursor: pointer; flex: 1; }
+    .check-item.checked label { color: var(--verde-ok); }
+    .grid-verificar { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media(max-width:768px) { .grid-verificar { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>Verificar Albarán</h2>
+        <div class="topbar-sub">Revisión antes de enviar al cosechero</div>
+      </div>
+      <div class="topbar-right">
+        <a href="index.html" class="btn btn-secondary">← Volver</a>
+      </div>
+    </div>
+
+    <div class="content">
+      <div id="alert"></div>
+
+      <!-- INFO MARK -->
+      <div class="card" id="info_marca" style="background:var(--verde);border:none;margin-bottom:16px">
+        <div class="card-body" style="color:white"></div>
+      </div>
+
+      <div class="grid-verificar">
+
+        <!-- CHECKLIST DE VERIFICACIÓN -->
+        <div>
+          <div class="card">
+            <div class="card-header"><h3>✅ Lista de verificación</h3></div>
+            <div class="card-body">
+              <p style="font-size:13px;color:var(--subtexto);margin-bottom:14px">Confirma cada punto antes de enviar el albarán al cosechero.</p>
+              <div class="checklist">
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <input type="checkbox" id="c1">
+                  <label for="c1">Los kg totales coinciden con el albarán en papel</label>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <input type="checkbox" id="c2">
+                  <label for="c2">Las categorías (Extra, Mercadona, Primera, Segunda) están correctas</label>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <input type="checkbox" id="c3">
+                  <label for="c3">El número de racimos es correcto</label>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <input type="checkbox" id="c4">
+                  <label for="c4">Las cajas anotadas a mano están incluidas</label>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <input type="checkbox" id="c5">
+                  <label for="c5">La finca y el cosechero son correctos</label>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                  <input type="checkbox" id="c6">
+                  <label for="c6">El email del cosechero está registrado</label>
+                </div>
+              </div>
+              <div id="check_status" style="font-size:13px;color:var(--subtexto);text-align:center;padding:8px">
+                0 de 6 puntos verificados
+              </div>
+            </div>
+          </div>
+
+          <!-- EDITAR SI ALGO NO CUADRA -->
+          <div class="card">
+            <div class="card-header"><h3>✏️ Correcciones</h3></div>
+            <div class="card-body">
+              <p style="font-size:13px;color:var(--subtexto);margin-bottom:14px">Si algo no cuadra, corrígelo aquí antes de enviar.</p>
+              <div class="form-row">
+                <div class="form-group"><label>Kg Extra</label><input type="number" id="e_kg_extra" min="0"></div>
+                <div class="form-group"><label>Kg Mercadona</label><input type="number" id="e_kg_mercadona" min="0"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label>Kg Primera</label><input type="number" id="e_kg_primera" min="0"></div>
+                <div class="form-group"><label>Kg Segunda</label><input type="number" id="e_kg_segunda" min="0"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label>Kg Desecho</label><input type="number" id="e_kg_desecho" min="0"></div>
+                <div class="form-group"><label>Kg Dedos</label><input type="number" id="e_kg_dedos" min="0"></div>
+              </div>
+              <div class="form-group"><label>Observaciones</label><textarea id="e_obs" placeholder="Notas adicionales..."></textarea></div>
+              <button class="btn btn-secondary" onclick="guardarCorrecciones()">Guardar correcciones</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PREVIEW ALBARÁN -->
+        <div>
+          <div class="card">
+            <div class="card-header"><h3>📄 Vista previa del albarán</h3></div>
+            <div class="card-body">
+              <div class="albaran-preview" id="preview_albaran">
+                <div class="albaran-header">
+                  <h2>AGRÍCOLA LLANOS DE SARDINA, S.C.C.</h2>
+                  <p>Cruz de Pineda, Carretera Cruz de Pineda 3, 35414 Arucas</p>
+                  <p>928.600.123 · llanosdesardina.cardones@gmail.com</p>
+                </div>
+                <div class="albaran-meta" id="p_meta"></div>
+                <div style="background:#f0f7f4;padding:10px 12px;border-radius:6px;margin-bottom:12px;font-size:12px" id="p_proveedor"></div>
+                <table class="albaran-table">
+                  <thead><tr><th>Calidad</th><th>Cajas</th><th>Kilos</th><th>%</th></tr></thead>
+                  <tbody id="p_lineas"></tbody>
+                </table>
+                <div style="font-size:12px;margin-top:8px" id="p_footer"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- PANEL ENVIAR -->
+      <div class="verificar-panel" id="panel_enviar">
+        <div class="verificar-info">
+          <strong id="panel_titulo">Pendiente de verificación</strong>
+          <span id="panel_sub">Completa la lista de verificación para poder enviar</span>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-secondary" onclick="window.location.href='index.html'">Cancelar</button>
+          <button class="btn-enviar" id="btn_enviar" onclick="enviarAlbaran()" disabled style="opacity:0.5;cursor:not-allowed">
+            ✉️ Enviar al cosechero
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="loading"><div class="spinner"></div></div>
+
+  <script src="../assets/js/supabase.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const albaranId = params.get('id');
+    let albaran = null;
+    let checksCompletados = 0;
+
+    async function init() {
+      renderSidebar('recepcion');
+      if (!albaranId) { window.location.href = 'index.html'; return; }
+      showLoading(true);
+      const { data } = await sb.from('albaranes_entrada')
+        .select('*, fincas(nombre, ubicacion), cosecheros(nombre, email, iban)')
+        .eq('id', albaranId).single();
+      showLoading(false);
+      albaran = data;
+      renderInfo();
+      renderPreview();
+      rellenarCorrecciones();
+    }
+
+    function renderInfo() {
+      document.querySelector('#info_marca .card-body').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px">
+          <div><div style="font-size:10px;opacity:0.6;text-transform:uppercase;font-weight:700">Albarán</div><div style="font-size:18px;font-weight:800">${albaran.numero}</div></div>
+          <div><div style="font-size:10px;opacity:0.6;text-transform:uppercase;font-weight:700">Finca</div><div style="font-size:16px;font-weight:700">${albaran.fincas?.nombre||'—'}</div></div>
+          <div><div style="font-size:10px;opacity:0.6;text-transform:uppercase;font-weight:700">Cosechero</div><div style="font-size:16px;font-weight:700">${albaran.cosecheros?.nombre||'—'}</div></div>
+          <div><div style="font-size:10px;opacity:0.6;text-transform:uppercase;font-weight:700">Email</div><div style="font-size:14px">${albaran.cosecheros?.email||'⚠ Sin email'}</div></div>
+          <div><div style="font-size:10px;opacity:0.6;text-transform:uppercase;font-weight:700">Kg total</div><div style="font-size:18px;font-weight:800">${(albaran.kg_total||0).toLocaleString('es-ES')} kg</div></div>
+          <div><div style="font-size:10px;opacity:0.6;text-transform:uppercase;font-weight:700">Racimos</div><div style="font-size:18px;font-weight:800">${albaran.racimos||'—'}</div></div>
+        </div>`;
+    }
+
+    function renderPreview() {
+      const a = albaran;
+      const total = (a.kg_extra||0)+(a.kg_mercadona||0)+(a.kg_primera||0)+(a.kg_segunda||0)+(a.kg_desecho||0)+(a.kg_dedos||0);
+      const totalCajas = (a.cajas_extra||0)+(a.cajas_mercadona||0)+(a.cajas_primera||0)+(a.cajas_segunda||0);
+
+      document.getElementById('p_meta').innerHTML = `
+        <div class="albaran-meta-item"><strong>Entrega Nº:</strong> ${a.numero}</div>
+        <div class="albaran-meta-item"><strong>Emitida:</strong> ${formatDate(a.fecha)}</div>
+        <div class="albaran-meta-item"><strong>Semana:</strong> ${a.semana||'—'}</div>
+        <div class="albaran-meta-item"><strong>Racimos:</strong> ${a.racimos||'—'}</div>`;
+
+      document.getElementById('p_proveedor').innerHTML = `
+        <strong>Finca:</strong> ${a.fincas?.nombre||'—'}&nbsp;&nbsp;&nbsp;
+        <strong>Cosechero:</strong> ${a.cosecheros?.nombre||'—'}`;
+
+      const lineas = [
+        { cal:'Extra (10 kg)', cajas: a.cajas_extra||0, kg: a.kg_extra||0 },
+        { cal:'Mercadona (16-17 kg)', cajas: a.cajas_mercadona||0, kg: a.kg_mercadona||0 },
+        { cal:'Primera (18 kg)', cajas: a.cajas_primera||0, kg: a.kg_primera||0 },
+        { cal:'Segunda (10 kg)', cajas: a.cajas_segunda||0, kg: a.kg_segunda||0 },
+        { cal:'Desecho', cajas:'—', kg: a.kg_desecho||0 },
+        { cal:'Dedos', cajas:'—', kg: a.kg_dedos||0 },
+      ].filter(l => l.kg > 0);
+
+      document.getElementById('p_lineas').innerHTML = lineas.map(l => `
+        <tr>
+          <td>${l.cal}</td>
+          <td>${l.cajas}</td>
+          <td>${Number(l.kg).toLocaleString('es-ES')}</td>
+          <td>${total > 0 ? (l.kg/total*100).toFixed(2) : 0}%</td>
+        </tr>`).join('') + `
+        <tr class="total-row">
+          <td>TOTAL</td>
+          <td>${totalCajas}</td>
+          <td>${total.toLocaleString('es-ES')}</td>
+          <td>100%</td>
+        </tr>`;
+
+      document.getElementById('p_footer').innerHTML = `
+        <strong>Peso Medio: ${a.peso_medio ? Number(a.peso_medio).toFixed(3) : '—'}</strong>
+        ${a.observaciones ? `<br><em>Obs: ${a.observaciones}</em>` : ''}`;
+    }
+
+    function rellenarCorrecciones() {
+      const a = albaran;
+      ['kg_extra','kg_mercadona','kg_primera','kg_segunda','kg_desecho','kg_dedos'].forEach(campo => {
+        const el = document.getElementById('e_' + campo);
+        if (el) el.value = a[campo] || 0;
+      });
+      document.getElementById('e_obs').value = a.observaciones || '';
+    }
+
+    function toggleCheck(item) {
+      const cb = item.querySelector('input[type=checkbox]');
+      cb.checked = !cb.checked;
+      item.classList.toggle('checked', cb.checked);
+      checksCompletados = document.querySelectorAll('.check-item input:checked').length;
+      document.getElementById('check_status').textContent = `${checksCompletados} de 6 puntos verificados`;
+
+      const btn = document.getElementById('btn_enviar');
+      if (checksCompletados === 6) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        document.getElementById('panel_titulo').textContent = '✅ Todo verificado — listo para enviar';
+        document.getElementById('panel_sub').textContent = `Se enviará el albarán a ${albaran.cosecheros?.email || 'el cosechero'}`;
+      } else {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+        document.getElementById('panel_titulo').textContent = 'Pendiente de verificación';
+        document.getElementById('panel_sub').textContent = `Completa los ${6-checksCompletados} puntos restantes para poder enviar`;
+      }
+    }
+
+    async function guardarCorrecciones() {
+      showLoading(true);
+      const kg_extra = parseFloat(document.getElementById('e_kg_extra').value)||0;
+      const kg_mercadona = parseFloat(document.getElementById('e_kg_mercadona').value)||0;
+      const kg_primera = parseFloat(document.getElementById('e_kg_primera').value)||0;
+      const kg_segunda = parseFloat(document.getElementById('e_kg_segunda').value)||0;
+      const kg_desecho = parseFloat(document.getElementById('e_kg_desecho').value)||0;
+      const kg_dedos = parseFloat(document.getElementById('e_kg_dedos').value)||0;
+      const kg_total = kg_extra+kg_mercadona+kg_primera+kg_segunda+kg_desecho+kg_dedos;
+      const peso_medio = albaran.racimos > 0 ? kg_total/albaran.racimos : 0;
+
+      const { error } = await sb.from('albaranes_entrada').update({
+        kg_extra, kg_mercadona, kg_primera, kg_segunda, kg_desecho, kg_dedos,
+        kg_total, peso_medio, observaciones: document.getElementById('e_obs').value
+      }).eq('id', albaranId);
+
+      showLoading(false);
+      if (error) { showAlert('Error al guardar: ' + error.message, 'error'); return; }
+      showAlert('Correcciones guardadas', 'success');
+      const { data } = await sb.from('albaranes_entrada').select('*, fincas(nombre,ubicacion), cosecheros(nombre,email,iban)').eq('id', albaranId).single();
+      albaran = data;
+      renderPreview();
+    }
+
+    async function enviarAlbaran() {
+      if (checksCompletados < 6) return;
+      showLoading(true);
+      await sb.from('albaranes_entrada').update({ estado: 'inspeccionado' }).eq('id', albaranId);
+      showLoading(false);
+      showAlert('✅ Albarán verificado y enviado al cosechero', 'success');
+      setTimeout(() => window.location.href = 'index.html', 2000);
+    }
+
+    init();
+  </script>
+</body>
+</html>
