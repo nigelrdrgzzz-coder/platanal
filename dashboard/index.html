@@ -4,97 +4,135 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard — Platanal</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
-  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <style>
-    .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; margin-bottom:24px; }
-    .kpi { background:white; border-radius:var(--radius); box-shadow:var(--shadow); padding:20px; border-left:4px solid var(--verde); }
-    .kpi.alerta { border-left-color:var(--rojo); }
-    .kpi.warning { border-left-color:var(--naranja); }
-    .kpi-val { font-size:28px; font-weight:700; color:var(--verde); margin-top:4px; }
-    .kpi.alerta .kpi-val { color:var(--rojo); }
-    .kpi.warning .kpi-val { color:var(--naranja); }
-    .kpi-lbl { font-size:11px; text-transform:uppercase; color:var(--gris-texto); font-weight:700; letter-spacing:0.5px; }
-    .kpi-sub { font-size:12px; color:var(--gris-texto); margin-top:2px; }
-    .charts { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
-    @media(max-width:768px) { .charts { grid-template-columns:1fr; } }
+    .grid-2 { display:grid; grid-template-columns:2fr 1fr; gap:16px; }
+    .alerta-item { display:flex; align-items:flex-start; gap:12px; padding:14px 0; border-bottom:1px solid var(--gris2); }
+    .alerta-item:last-child { border-bottom:none; }
+    .alerta-ico { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+    .alerta-ico.warn { background:#FEF3C7; }
+    .alerta-ico.rojo { background:#FEE2E2; }
+    .alerta-ico.ok { background:#D1FAE5; }
+    .alerta-txt strong { font-size:13px; display:block; margin-bottom:2px; }
+    .alerta-txt span { font-size:12px; color:var(--subtexto); }
+    .finca-row { display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--gris2); }
+    .finca-row:last-child { border-bottom:none; }
+    .finca-av { width:34px; height:34px; border-radius:8px; background:var(--verde); color:var(--amarillo); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; }
+    .finca-info { flex:1; }
+    .finca-info strong { font-size:13px; display:block; }
+    .finca-info span { font-size:11px; color:var(--subtexto); }
+    .finca-kg { text-align:right; }
+    .finca-kg strong { font-size:13px; display:block; }
+    .finca-kg span { font-size:11px; color:var(--subtexto); }
+    @media(max-width:900px) { .grid-2 { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
-  <nav>
-    <a href="index.html" class="logo">🍌 Platanal</a>
-    <a href="../maestros/index.html">Maestros</a>
-    <a href="../recepcion/index.html">Recepción</a>
-    <a href="../calidad/index.html">Calidad</a>
-    <a href="../valorizacion/index.html">Valorización</a>
-    <a href="../stock/index.html">Stock</a>
-    <a href="../despacho/index.html">Despacho</a>
-    <a href="index.html" class="active">Dashboard</a>
-    <span style="margin-left:auto;color:rgba(255,255,255,0.7);font-size:13px">Nigel — Gerente</span>
-  </nav>
-  <div id="loading"><div class="spinner"></div></div>
-  <div class="container">
-    <div class="page-header">
-      <h1>Dashboard</h1>
-      <span style="color:var(--gris-texto);font-size:13px" id="fecha_hoy"></span>
-    </div>
-
-    <div class="kpi-grid">
-      <div class="kpi"><div class="kpi-lbl">Albaranes hoy</div><div class="kpi-val" id="k_hoy">—</div></div>
-      <div class="kpi"><div class="kpi-lbl">Kg recibidos hoy</div><div class="kpi-val" id="k_kg_hoy">—</div></div>
-      <div class="kpi"><div class="kpi-lbl">Kg en cámara</div><div class="kpi-val" id="k_stock">—</div></div>
-      <div class="kpi warning"><div class="kpi-lbl">Pendientes calidad</div><div class="kpi-val" id="k_calidad">—</div></div>
-      <div class="kpi warning"><div class="kpi-lbl">Liquidaciones pendientes</div><div class="kpi-val" id="k_liq">—</div></div>
-      <div class="kpi alerta"><div class="kpi-lbl">Alertas stock antiguo</div><div class="kpi-val" id="k_alertas">—</div></div>
-    </div>
-
-    <div class="charts">
-      <div class="card">
-        <h2 style="margin-bottom:16px">Kg recibidos últimos 7 días</h2>
-        <canvas id="chart_kg" height="200"></canvas>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>Dashboard</h2>
+        <div class="topbar-sub" id="fecha"></div>
       </div>
-      <div class="card">
-        <h2 style="margin-bottom:16px">Albaranes por finca (este mes)</h2>
-        <canvas id="chart_fincas" height="200"></canvas>
+      <div class="topbar-right">
+        <a href="../recepcion/nuevo.html" class="btn btn-primary">+ Nueva recepción</a>
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-      <div class="card">
-        <h2 style="margin-bottom:12px">Últimos albaranes</h2>
-        <table style="width:100%;font-size:13px;border-collapse:collapse">
-          <thead><tr><th style="padding:6px;text-align:left;border-bottom:2px solid var(--gris)">Nº</th><th style="padding:6px;text-align:left;border-bottom:2px solid var(--gris)">Finca</th><th style="padding:6px;text-align:right;border-bottom:2px solid var(--gris)">Kg</th><th style="padding:6px;text-align:center;border-bottom:2px solid var(--gris)">Estado</th></tr></thead>
-          <tbody id="tabla_recientes"></tbody>
-        </table>
+    <div class="content">
+      <div id="alert"></div>
+
+      <div class="kpi-grid">
+        <div class="kpi verde">
+          <div class="kpi-icon">📥</div>
+          <div class="kpi-val" id="k_hoy">—</div>
+          <div class="kpi-lbl">Albaranes hoy</div>
+        </div>
+        <div class="kpi amarillo">
+          <div class="kpi-icon">⚖️</div>
+          <div class="kpi-val" id="k_kg">—</div>
+          <div class="kpi-lbl">Kg recibidos hoy</div>
+        </div>
+        <div class="kpi azul">
+          <div class="kpi-icon">📦</div>
+          <div class="kpi-val" id="k_stock">—</div>
+          <div class="kpi-lbl">Kg en cámara</div>
+        </div>
+        <div class="kpi amarillo">
+          <div class="kpi-icon">✅</div>
+          <div class="kpi-val" id="k_calidad">—</div>
+          <div class="kpi-lbl">Pendientes calidad</div>
+        </div>
+        <div class="kpi rojo">
+          <div class="kpi-icon">💶</div>
+          <div class="kpi-val" id="k_liq">—</div>
+          <div class="kpi-lbl">Liquidaciones pendientes</div>
+        </div>
+        <div class="kpi rojo">
+          <div class="kpi-icon">⚠️</div>
+          <div class="kpi-val" id="k_alertas">—</div>
+          <div class="kpi-lbl">Alertas stock antiguo</div>
+        </div>
       </div>
-      <div class="card">
-        <h2 style="margin-bottom:12px">Despachos del día</h2>
-        <table style="width:100%;font-size:13px;border-collapse:collapse">
-          <thead><tr><th style="padding:6px;text-align:left;border-bottom:2px solid var(--gris)">Nº</th><th style="padding:6px;text-align:left;border-bottom:2px solid var(--gris)">Conductor</th><th style="padding:6px;text-align:center;border-bottom:2px solid var(--gris)">Estado</th></tr></thead>
-          <tbody id="tabla_despachos"></tbody>
-        </table>
+
+      <div class="grid-2" style="margin-bottom:16px">
+        <div class="card" style="margin:0">
+          <div class="card-header">
+            <h3>Kg recibidos últimos 7 días</h3>
+          </div>
+          <div class="card-body">
+            <canvas id="chart_kg" height="160"></canvas>
+          </div>
+        </div>
+        <div class="card" style="margin:0">
+          <div class="card-header"><h3>Alertas activas</h3></div>
+          <div class="card-body" id="alertas_list" style="padding:0 20px"></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card" style="margin:0">
+          <div class="card-header">
+            <h3>Últimos albaranes</h3>
+            <a href="../recepcion/index.html" class="btn btn-sm btn-secondary">Ver todos</a>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Albarán</th><th>Finca</th><th>Kg</th><th>Estado</th></tr></thead>
+              <tbody id="tabla_albaranes"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card" style="margin:0">
+          <div class="card-header"><h3>Fincas este mes</h3></div>
+          <div class="card-body" style="padding:0 20px" id="tabla_fincas"></div>
+        </div>
       </div>
     </div>
   </div>
 
+  <div id="loading"><div class="spinner"></div></div>
+
   <script src="../assets/js/supabase.js"></script>
+  <script src="../assets/js/auth.js"></script>
   <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/layout.js"></script>
   <script>
     async function init() {
-      document.getElementById('fecha_hoy').textContent = new Date().toLocaleDateString('es-ES', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      renderSidebar('dashboard');
+      document.getElementById('fecha').textContent = getToday();
       showLoading(true);
 
       const hoy = new Date().toISOString().split('T')[0];
-      const [{ data: albs }, { data: lotes }, { data: inspPend }, { data: liqPend }, { data: despachos }] = await Promise.all([
-        sb.from('albaranes_entrada').select('*, fincas(nombre)').order('created_at', { ascending: false }).limit(100),
+      const [{ data: albs }, { data: lotes }, { data: inspPend }, { data: liqPend }] = await Promise.all([
+        sb.from('albaranes_entrada').select('*, fincas(nombre)').order('created_at', { ascending:false }).limit(100),
         sb.from('lotes').select('*').eq('estado','en_stock'),
         sb.from('albaranes_entrada').select('id').eq('estado','confirmado'),
-        sb.from('liquidaciones').select('id').eq('estado','borrador'),
-        sb.from('albaranes_salida').select('*, conductores(nombre)').eq('fecha_entrega', hoy)
+        sb.from('liquidaciones').select('id').eq('estado','borrador')
       ]);
-
       showLoading(false);
 
       const deHoy = (albs||[]).filter(a => a.fecha === hoy);
@@ -103,32 +141,53 @@
       const alertas = (lotes||[]).filter(l => Math.floor((new Date()-new Date(l.fecha_entrada))/86400000) >= 7);
 
       document.getElementById('k_hoy').textContent = deHoy.length;
-      document.getElementById('k_kg_hoy').textContent = kgHoy.toLocaleString('es-ES');
+      document.getElementById('k_kg').textContent = kgHoy.toLocaleString('es-ES') + ' kg';
       document.getElementById('k_stock').textContent = kgStock.toLocaleString('es-ES') + ' kg';
       document.getElementById('k_calidad').textContent = (inspPend||[]).length;
       document.getElementById('k_liq').textContent = (liqPend||[]).length;
       document.getElementById('k_alertas').textContent = alertas.length;
 
-      // Tabla recientes
-      document.getElementById('tabla_recientes').innerHTML = (albs||[]).slice(0,6).map(a => `
-        <tr><td style="padding:6px;border-bottom:1px solid var(--gris)">${a.numero}</td><td style="padding:6px;border-bottom:1px solid var(--gris)">${a.fincas?.nombre||'—'}</td><td style="padding:6px;border-bottom:1px solid var(--gris);text-align:right">${(a.kg_total||0).toLocaleString('es-ES')}</td><td style="padding:6px;border-bottom:1px solid var(--gris);text-align:center">${badgeEstado(a.estado)}</td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;padding:20px;color:#6c757d">Sin datos</td></tr>';
+      // Alertas
+      const alertHtml = [
+        ...(inspPend||[]).length ? [`<div class="alerta-item"><div class="alerta-ico warn">📋</div><div class="alerta-txt"><strong>${(inspPend||[]).length} albarán(es) pendientes de verificar</strong><span>Requieren revisión del oficinista</span></div></div>`] : [],
+        ...(liqPend||[]).length ? [`<div class="alerta-item"><div class="alerta-ico rojo">💶</div><div class="alerta-txt"><strong>${(liqPend||[]).length} liquidación(es) pendientes de aprobar</strong><span>Requieren aprobación del gerente</span></div></div>`] : [],
+        ...alertas.map(l => `<div class="alerta-item"><div class="alerta-ico warn">⚠️</div><div class="alerta-txt"><strong>${l.codigo} lleva ${Math.floor((new Date()-new Date(l.fecha_entrada))/86400000)} días en cámara</strong><span>${(l.kg_actuales||0).toLocaleString('es-ES')} kg</span></div></div>`)
+      ];
+      document.getElementById('alertas_list').innerHTML = alertHtml.length ? alertHtml.join('') : '<div class="alerta-item"><div class="alerta-ico ok">✅</div><div class="alerta-txt"><strong>Sin alertas activas</strong><span>Todo en orden</span></div></div>';
 
-      // Tabla despachos
-      document.getElementById('tabla_despachos').innerHTML = (despachos||[]).length
-        ? despachos.map(d => `<tr><td style="padding:6px;border-bottom:1px solid var(--gris)">${d.numero}</td><td style="padding:6px;border-bottom:1px solid var(--gris)">${d.conductores?.nombre||'—'}</td><td style="padding:6px;border-bottom:1px solid var(--gris);text-align:center">${badgeEstado(d.estado)}</td></tr>`).join('')
-        : '<tr><td colspan="3" style="text-align:center;padding:20px;color:#6c757d">Sin despachos hoy</td></tr>';
+      // Tabla albaranes
+      document.getElementById('tabla_albaranes').innerHTML = (albs||[]).slice(0,6).map(a => `
+        <tr>
+          <td><strong>${a.numero}</strong><br><span style="font-size:11px;color:var(--subtexto)">${formatDate(a.fecha)}</span></td>
+          <td>${a.fincas?.nombre||'—'}</td>
+          <td><strong>${(a.kg_total||0).toLocaleString('es-ES')} kg</strong></td>
+          <td>${badgeEstado(a.estado)}</td>
+        </tr>`).join('') || '<tr><td colspan="4" class="empty"><p>Sin albaranes</p></td></tr>';
 
-      // Chart kg últimos 7 días
+      // Fincas del mes
+      const mes = hoy.substring(0,7);
+      const fincaMap = {};
+      (albs||[]).filter(a => a.fecha?.startsWith(mes)).forEach(a => {
+        const n = a.fincas?.nombre || 'Sin finca';
+        fincaMap[n] = (fincaMap[n]||0) + (a.kg_total||0);
+      });
+      const fincas = Object.entries(fincaMap).sort((a,b) => b[1]-a[1]).slice(0,5);
+      const totalKg = fincas.reduce((s,[,kg]) => s+kg, 0);
+      document.getElementById('tabla_fincas').innerHTML = fincas.length ? fincas.map(([nombre, kg]) => `
+        <div class="finca-row">
+          <div class="finca-av">${nombre.substring(0,2).toUpperCase()}</div>
+          <div class="finca-info"><strong>${nombre}</strong><span>${totalKg > 0 ? Math.round(kg/totalKg*100) : 0}% del total</span></div>
+          <div class="finca-kg"><strong>${kg.toLocaleString('es-ES')} kg</strong></div>
+        </div>`).join('') : '<div class="empty"><p>Sin datos este mes</p></div>';
+
+      // Chart
       const dias = Array.from({length:7}, (_,i) => { const d=new Date(); d.setDate(d.getDate()-6+i); return d.toISOString().split('T')[0]; });
       const kgPorDia = dias.map(d => (albs||[]).filter(a=>a.fecha===d).reduce((s,a)=>s+(a.kg_total||0),0));
-      new Chart(document.getElementById('chart_kg'), { type:'bar', data:{ labels:dias.map(d=>new Date(d).toLocaleDateString('es-ES',{day:'numeric',month:'short'})), datasets:[{label:'Kg',data:kgPorDia,backgroundColor:'rgba(27,67,50,0.7)',borderRadius:4}]}, options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
-
-      // Chart fincas
-      const fincaMap = {};
-      const mesActual = hoy.substring(0,7);
-      (albs||[]).filter(a=>a.fecha?.startsWith(mesActual)).forEach(a => { const n=a.fincas?.nombre||'Sin finca'; fincaMap[n]=(fincaMap[n]||0)+1; });
-      const fincaLabels = Object.keys(fincaMap); const fincaVals = Object.values(fincaMap);
-      new Chart(document.getElementById('chart_fincas'), { type:'doughnut', data:{ labels:fincaLabels, datasets:[{data:fincaVals,backgroundColor:['#1B4332','#2D6A4F','#40916C','#52B788','#74C69D','#95D5B2']}]}, options:{plugins:{legend:{position:'bottom'}}}});
+      new Chart(document.getElementById('chart_kg'), {
+        type:'bar',
+        data:{ labels:dias.map(d=>new Date(d+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric'})), datasets:[{label:'Kg', data:kgPorDia, backgroundColor:'rgba(27,67,50,0.75)', borderRadius:5, hoverBackgroundColor:'#1B4332'}]},
+        options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{font:{size:11}}}}, responsive:true, maintainAspectRatio:false }
+      });
     }
 
     init();

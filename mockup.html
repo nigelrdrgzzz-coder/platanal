@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Platanal — Mockup Visual</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --verde: #1B4332;
+      --verde2: #2D6A4F;
+      --amarillo: #F9C74F;
+      --blanco: #FFFFFF;
+      --gris: #F4F6F8;
+      --gris2: #E8ECF0;
+      --texto: #1A1D23;
+      --subtexto: #6B7280;
+      --rojo: #EF4444;
+      --naranja: #F59E0B;
+      --azul: #3B82F6;
+      --verde-ok: #10B981;
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--gris); color: var(--texto); display: flex; min-height: 100vh; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 240px;
+      background: var(--verde);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 24px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-logo .logo-icon { font-size: 28px; }
+    .sidebar-logo h1 { color: var(--amarillo); font-size: 20px; font-weight: 800; letter-spacing: -0.5px; margin-top: 4px; }
+    .sidebar-logo p { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 2px; }
+
+    .sidebar-user {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .avatar {
+      width: 36px; height: 36px;
+      background: var(--amarillo);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: var(--verde); font-size: 14px;
+    }
+    .sidebar-user-info { flex: 1; }
+    .sidebar-user-info strong { color: white; font-size: 13px; display: block; }
+    .sidebar-user-info span { color: rgba(255,255,255,0.5); font-size: 11px; }
+
+    .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-section { padding: 8px 20px 4px; color: rgba(255,255,255,0.35); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 14px;
+      border-left: 3px solid transparent;
+      margin: 1px 0;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+    .nav-item.active { background: rgba(249,199,79,0.15); color: var(--amarillo); border-left-color: var(--amarillo); }
+    .nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
+    .nav-item .badge { margin-left: auto; background: var(--rojo); color: white; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; }
+    .nav-item .badge.warn { background: var(--naranja); }
+
+    .sidebar-bottom {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-bottom a { color: rgba(255,255,255,0.5); font-size: 13px; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .sidebar-bottom a:hover { color: white; }
+
+    /* MAIN */
+    .main { margin-left: 240px; flex: 1; min-height: 100vh; }
+
+    /* TOPBAR */
+    .topbar {
+      background: white;
+      padding: 0 28px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--gris2);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar h2 { font-size: 20px; font-weight: 700; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .topbar-date { color: var(--subtexto); font-size: 13px; }
+    .btn-nuevo {
+      background: var(--verde); color: white;
+      padding: 9px 18px; border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      border: none; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .notif { width: 36px; height: 36px; border-radius: 8px; background: var(--gris); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; font-size: 18px; }
+    .notif-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: var(--rojo); border-radius: 50%; border: 2px solid white; }
+
+    /* CONTENT */
+    .content { padding: 28px; }
+
+    /* KPI GRID */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .kpi-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid var(--gris2);
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .kpi-card.verde::before { background: var(--verde-ok); }
+    .kpi-card.amarillo::before { background: var(--amarillo); }
+    .kpi-card.rojo::before { background: var(--rojo); }
+    .kpi-card.azul::before { background: var(--azul); }
+    .kpi-icon { font-size: 28px; margin-bottom: 12px; }
+    .kpi-value { font-size: 32px; font-weight: 800; color: var(--texto); line-height: 1; }
+    .kpi-label { font-size: 13px; color: var(--subtexto); margin-top: 6px; font-weight: 500; }
+    .kpi-change { font-size: 12px; margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+    .kpi-change.up { color: var(--verde-ok); }
+    .kpi-change.down { color: var(--rojo); }
+    .kpi-change.warn { color: var(--naranja); }
+
+    /* GRID 2 COL */
+    .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+    /* CARD */
+    .card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--gris2);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 18px 20px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--gris2);
+    }
+    .card-header h3 { font-size: 15px; font-weight: 700; }
+    .card-header span { font-size: 12px; color: var(--subtexto); }
+    .card-body { padding: 20px; }
+
+    /* CHART FAKE */
+    .chart-bar-container { display: flex; align-items: flex-end; gap: 8px; height: 120px; padding: 0 4px; }
+    .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+    .chart-bar { width: 100%; background: var(--verde); border-radius: 4px 4px 0 0; opacity: 0.8; transition: opacity 0.2s; }
+    .chart-bar:hover { opacity: 1; }
+    .chart-bar.hoy { background: var(--amarillo); opacity: 1; }
+    .chart-label { font-size: 10px; color: var(--subtexto); }
+
+    /* TABLE */
+    table { width: 100%; border-collapse: collapse; }
+    th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--subtexto); letter-spacing: 0.5px; background: var(--gris); border-bottom: 1px solid var(--gris2); }
+    td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--gris2); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #FAFBFC; }
+
+    /* BADGE */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-verde { background: #D1FAE5; color: #065F46; }
+    .badge-amarillo { background: #FEF3C7; color: #92400E; }
+    .badge-rojo { background: #FEE2E2; color: #991B1B; }
+    .badge-azul { background: #DBEAFE; color: #1E40AF; }
+    .badge-gris { background: var(--gris2); color: var(--subtexto); }
+
+    /* ALERTAS */
+    .alerta-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--gris2);
+    }
+    .alerta-item:last-child { border-bottom: none; }
+    .alerta-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .alerta-icon.warn { background: #FEF3C7; }
+    .alerta-icon.info { background: #DBEAFE; }
+    .alerta-icon.ok { background: #D1FAE5; }
+    .alerta-text strong { font-size: 13px; display: block; margin-bottom: 2px; }
+    .alerta-text span { font-size: 12px; color: var(--subtexto); }
+
+    /* DONUT FAKE */
+    .donut-wrap { display: flex; align-items: center; gap: 20px; }
+    .donut { width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(var(--verde) 0% 65%, var(--verde-ok) 65% 82%, var(--amarillo) 82% 93%, var(--rojo) 93% 100%); position: relative; flex-shrink: 0; }
+    .donut::after { content: ''; position: absolute; top: 18px; left: 18px; right: 18px; bottom: 18px; background: white; border-radius: 50%; }
+    .donut-labels { flex: 1; }
+    .donut-label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }
+    .donut-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+    /* FINCA ROW */
+    .finca-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gris2); }
+    .finca-row:last-child { border-bottom: none; }
+    .finca-avatar { width: 36px; height: 36px; border-radius: 8px; background: var(--verde); color: var(--amarillo); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+    .finca-info { flex: 1; }
+    .finca-info strong { font-size: 13px; display: block; }
+    .finca-info span { font-size: 12px; color: var(--subtexto); }
+    .finca-kg { text-align: right; }
+    .finca-kg strong { font-size: 14px; display: block; }
+    .finca-kg span { font-size: 11px; color: var(--subtexto); }
+    .finca-bar-wrap { width: 60px; }
+    .finca-bar-bg { height: 4px; background: var(--gris2); border-radius: 2px; }
+    .finca-bar-fill { height: 4px; background: var(--verde); border-radius: 2px; }
+
+    /* TABS */
+    .tabs-demo { display: flex; gap: 4px; padding: 16px 20px 0; border-bottom: 1px solid var(--gris2); background: white; }
+    .tab-demo { padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--subtexto); cursor: pointer; border-bottom: 2px solid transparent; }
+    .tab-demo.active { color: var(--verde); border-bottom-color: var(--verde); }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🍌</div>
+      <h1>Platanal</h1>
+      <p>Gestión de almacén</p>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="avatar">F</div>
+      <div class="sidebar-user-info">
+        <strong>Francisco García</strong>
+        <span>Gerente — Llanos de Sardina</span>
+      </div>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-section">Principal</div>
+      <div class="nav-item active" onclick="showSection('dashboard')">
+        <span class="icon">🏠</span> Dashboard
+      </div>
+
+      <div class="nav-section">Operaciones</div>
+      <div class="nav-item" onclick="showSection('recepcion')">
+        <span class="icon">📥</span> Recepción
+        <span class="badge warn">3</span>
+      </div>
+      <div class="nav-item" onclick="showSection('calidad')">
+        <span class="icon">✅</span> Calidad
+        <span class="badge">2</span>
+      </div>
+      <div class="nav-item" onclick="showSection('stock')">
+        <span class="icon">📦</span> Stock
+      </div>
+      <div class="nav-item" onclick="showSection('despacho')">
+        <span class="icon">🚛</span> Despacho
+      </div>
+
+      <div class="nav-section">Finanzas</div>
+      <div class="nav-item" onclick="showSection('valorizacion')">
+        <span class="icon">💶</span> Valorización
+        <span class="badge warn">1</span>
+      </div>
+
+      <div class="nav-section">Configuración</div>
+      <div class="nav-item" onclick="showSection('maestros')">
+        <span class="icon">⚙️</span> Maestros
+      </div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <a href="#">⬚ Cerrar sesión</a>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div>
+        <h2 id="page-title">Dashboard</h2>
+        <div style="font-size:12px;color:var(--subtexto);margin-top:2px">Miércoles, 30 de abril de 2026</div>
+      </div>
+      <div class="topbar-right">
+        <div class="notif">🔔<div class="notif-dot"></div></div>
+        <button class="btn-nuevo" id="btn-nuevo" onclick="alert('Abrir formulario de nueva recepción')">+ Nueva recepción</button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="content" id="section-dashboard">
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card verde">
+          <div class="kpi-icon">📥</div>
+          <div class="kpi-value">12</div>
+          <div class="kpi-label">Albaranes esta semana</div>
+          <div class="kpi-change up">↑ 3 más que la semana pasada</div>
+        </div>
+        <div class="kpi-card amarillo">
+          <div class="kpi-icon">⚖️</div>
+          <div class="kpi-value">48.320</div>
+          <div class="kpi-label">Kg recibidos (semana)</div>
+          <div class="kpi-change up">↑ 12% vs semana anterior</div>
+        </div>
+        <div class="kpi-card azul">
+          <div class="kpi-icon">📦</div>
+          <div class="kpi-value">23.840</div>
+          <div class="kpi-label">Kg en cámara ahora</div>
+          <div class="kpi-change warn">⚠ 3 lotes con +7 días</div>
+        </div>
+        <div class="kpi-card rojo">
+          <div class="kpi-icon">💶</div>
+          <div class="kpi-value">€14.280</div>
+          <div class="kpi-label">Liquidaciones pendientes</div>
+          <div class="kpi-change down">1 pendiente de aprobar</div>
+        </div>
+      </div>
+
+      <!-- CHARTS + ALERTS -->
+      <div class="grid-2">
+        <!-- CHART -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Kg recibidos últimos 7 días</h3>
+            <span>Total: 48.320 kg</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-bar-container">
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:45%"></div><div class="chart-label">Jue</div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:62%"></div><div class="chart-label">Vie</div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:30%"></div><div class="chart-label">Sáb</div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:0%"></div><div class="chart-label">Dom</div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:78%"></div><div class="chart-label">Lun</div></div>
+              <div class="chart-bar-wrap"><div class="chart-bar" style="height:55%"></div><div class="chart-label">Mar</div></div>
+              <div class="chart-bar-wrap hoy"><div class="chart-bar hoy" style="height:88%"></div><div class="chart-label" style="color:var(--amarillo);font-weight:700">Hoy</div></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+              <span class="badge badge-verde">● Extra: 8.240 kg</span>
+              <span class="badge badge-azul">● Mercadona: 18.640 kg</span>
+              <span class="badge badge-amarillo">● Primera: 14.320 kg</span>
+              <span class="badge badge-gris">● Segunda: 5.820 kg</span>
+              <span class="badge badge-rojo">● Desecho: 1.300 kg</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ALERTAS -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Alertas activas</h3>
+            <span class="badge badge-rojo">3 alertas</span>
+          </div>
+          <div class="card-body" style="padding:16px 20px">
+            <div class="alerta-item">
+              <div class="alerta-icon warn">⚠️</div>
+              <div class="alerta-text">
+                <strong>Lote LOTE-2042 lleva 9 días en cámara</strong>
+                <span>Finca El Guincho — 1.240 kg en Cámara 2</span>
+              </div>
+            </div>
+            <div class="alerta-item">
+              <div class="alerta-icon warn">📋</div>
+              <div class="alerta-text">
+                <strong>2 albaranes pendientes de inspección</strong>
+                <span>Finca Las Palmas y Finca El Roque</span>
+              </div>
+            </div>
+            <div class="alerta-item">
+              <div class="alerta-icon info">💶</div>
+              <div class="alerta-text">
+                <strong>Liquidación pendiente de aprobación</strong>
+                <span>Cosechero: Juan Pérez — €4.280</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLA + FINCAS -->
+      <div class="grid-2">
+        <!-- ÚLTIMOS ALBARANES -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Últimos albaranes</h3>
+            <a href="#" style="font-size:12px;color:var(--verde);text-decoration:none;font-weight:600">Ver todos →</a>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Albarán</th>
+                <th>Finca</th>
+                <th>Kg</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>ALB-00156</strong><br><span style="font-size:11px;color:var(--subtexto)">Hoy 09:24</span></td>
+                <td>El Guincho</td>
+                <td><strong>2.104 kg</strong></td>
+                <td><span class="badge badge-verde">✓ Inspeccionado</span></td>
+              </tr>
+              <tr>
+                <td><strong>ALB-00155</strong><br><span style="font-size:11px;color:var(--subtexto)">Hoy 08:10</span></td>
+                <td>Las Palmas</td>
+                <td><strong>1.840 kg</strong></td>
+                <td><span class="badge badge-amarillo">⏳ Pendiente</span></td>
+              </tr>
+              <tr>
+                <td><strong>ALB-00154</strong><br><span style="font-size:11px;color:var(--subtexto)">Ayer 16:42</span></td>
+                <td>El Roque</td>
+                <td><strong>3.280 kg</strong></td>
+                <td><span class="badge badge-amarillo">⏳ Pendiente</span></td>
+              </tr>
+              <tr>
+                <td><strong>ALB-00153</strong><br><span style="font-size:11px;color:var(--subtexto)">Ayer 14:15</span></td>
+                <td>La Galería</td>
+                <td><strong>1.620 kg</strong></td>
+                <td><span class="badge badge-verde">✓ Liquidado</span></td>
+              </tr>
+              <tr>
+                <td><strong>ALB-00152</strong><br><span style="font-size:11px;color:var(--subtexto)">Ayer 11:30</span></td>
+                <td>El Guincho</td>
+                <td><strong>2.380 kg</strong></td>
+                <td><span class="badge badge-verde">✓ Liquidado</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- FINCAS TOP -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Fincas este mes</h3>
+            <span>Abril 2026</span>
+          </div>
+          <div class="card-body" style="padding:16px 20px">
+
+            <div style="margin-bottom:20px">
+              <div class="donut-wrap">
+                <div class="donut"></div>
+                <div class="donut-labels">
+                  <div class="donut-label"><div class="donut-dot" style="background:var(--verde)"></div><span>El Guincho — 38%</span></div>
+                  <div class="donut-label"><div class="donut-dot" style="background:var(--verde-ok)"></div><span>Las Palmas — 25%</span></div>
+                  <div class="donut-label"><div class="donut-dot" style="background:var(--amarillo)"></div><span>El Roque — 22%</span></div>
+                  <div class="donut-label"><div class="donut-dot" style="background:var(--rojo)"></div><span>La Galería — 15%</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="finca-row">
+              <div class="finca-avatar">EG</div>
+              <div class="finca-info"><strong>El Guincho</strong><span>Juan Pérez</span></div>
+              <div class="finca-kg"><strong>18.420 kg</strong><span>38%</span></div>
+            </div>
+            <div class="finca-row">
+              <div class="finca-avatar">LP</div>
+              <div class="finca-info"><strong>Las Palmas</strong><span>María García</span></div>
+              <div class="finca-kg"><strong>12.080 kg</strong><span>25%</span></div>
+            </div>
+            <div class="finca-row">
+              <div class="finca-avatar">ER</div>
+              <div class="finca-info"><strong>El Roque</strong><span>Carlos Díaz</span></div>
+              <div class="finca-kg"><strong>10.640 kg</strong><span>22%</span></div>
+            </div>
+            <div class="finca-row">
+              <div class="finca-avatar">LG</div>
+              <div class="finca-info"><strong>La Galería</strong><span>Ana Rodríguez</span></div>
+              <div class="finca-kg"><strong>7.260 kg</strong><span>15%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESPACHOS HOY -->
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header">
+          <h3>Despachos de hoy</h3>
+          <span>3 rutas programadas</span>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Ruta</th><th>Cliente</th><th>Conductor</th><th>Kg</th><th>Hora</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>DSP-0089</strong></td>
+              <td>Mercadona Arucas</td>
+              <td>🚛 Pedro Martín</td>
+              <td>4.800 kg</td>
+              <td>08:00</td>
+              <td><span class="badge badge-verde">✓ Entregado</span></td>
+            </tr>
+            <tr>
+              <td><strong>DSP-0090</strong></td>
+              <td>Mayorista Norte</td>
+              <td>🚛 Luis Sánchez</td>
+              <td>2.400 kg</td>
+              <td>10:30</td>
+              <td><span class="badge badge-azul">🚛 En ruta</span></td>
+            </tr>
+            <tr>
+              <td><strong>DSP-0091</strong></td>
+              <td>Supermercado El Super</td>
+              <td>🚛 Pedro Martín</td>
+              <td>1.600 kg</td>
+              <td>14:00</td>
+              <td><span class="badge badge-gris">⏳ Pendiente</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- OTRAS SECCIONES (placeholder) -->
+    <div class="content" id="section-recepcion" style="display:none">
+      <div class="card" style="padding:60px;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">📥</div>
+        <h2>Módulo Recepción</h2>
+        <p style="color:var(--subtexto);margin-top:8px">Lista de albaranes + formulario de nueva recepción</p>
+      </div>
+    </div>
+    <div class="content" id="section-calidad" style="display:none">
+      <div class="card" style="padding:60px;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">✅</div>
+        <h2>Módulo Calidad</h2>
+        <p style="color:var(--subtexto);margin-top:8px">Inspecciones pendientes + registro de calidad por lote</p>
+      </div>
+    </div>
+    <div class="content" id="section-stock" style="display:none">
+      <div class="card" style="padding:60px;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">📦</div>
+        <h2>Módulo Stock</h2>
+        <p style="color:var(--subtexto);margin-top:8px">Lotes en cámara, kg actuales, alertas de antigüedad</p>
+      </div>
+    </div>
+    <div class="content" id="section-despacho" style="display:none">
+      <div class="card" style="padding:60px;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">🚛</div>
+        <h2>Módulo Despacho</h2>
+        <p style="color:var(--subtexto);margin-top:8px">Pedidos, rutas, conductores y confirmación de entrega</p>
+      </div>
+    </div>
+    <div class="content" id="section-valorizacion" style="display:none">
+      <div class="card" style="padding:60px;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">💶</div>
+        <h2>Módulo Valorización</h2>
+        <p style="color:var(--subtexto);margin-top:8px">Liquidaciones por cosechero, cálculo automático, aprobación</p>
+      </div>
+    </div>
+    <div class="content" id="section-maestros" style="display:none">
+      <div class="card" style="padding:60px;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">⚙️</div>
+        <h2>Módulo Maestros</h2>
+        <p style="color:var(--subtexto);margin-top:8px">Fincas, cosecheros, clientes, conductores, tarifas</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const titles = { dashboard:'Dashboard', recepcion:'Recepción', calidad:'Control de Calidad', stock:'Stock en Almacén', despacho:'Despacho', valorizacion:'Valorización', maestros:'Datos Maestros' };
+    const btnTexts = { dashboard:'+ Nueva recepción', recepcion:'+ Nueva recepción', calidad:'+ Nueva inspección', stock:'', despacho:'+ Nuevo despacho', valorizacion:'+ Nueva liquidación', maestros:'+ Nuevo registro' };
+
+    function showSection(name) {
+      document.querySelectorAll('[id^="section-"]').forEach(el => el.style.display = 'none');
+      document.getElementById('section-' + name).style.display = 'block';
+      document.getElementById('page-title').textContent = titles[name];
+      document.getElementById('btn-nuevo').textContent = btnTexts[name];
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+    }
+  </script>
+</body>
+</html>
