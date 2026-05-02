@@ -369,6 +369,8 @@ async function guardarAlbaran(){
   try{
     const tk=getN('n-kg-extra')+getN('n-kg-mercadona')+getN('n-kg-primera')+getN('n-kg-segunda')+getN('n-kg-desecho')+getN('n-kg-dedos');
     const racimos=getI('n-racimos');
+    const finca=(fincas||[]).find(f=>f.id===document.getElementById('n-finca').value);
+    const cos=(cosecheros||[]).find(c=>c.id===document.getElementById('n-cosechero').value);
     const result=await apiPost('platanal/albaran',{
       numero:'ALB-'+Date.now(),
       fecha:document.getElementById('n-fecha').value,
@@ -386,9 +388,21 @@ async function guardarAlbaran(){
       estado:'confirmado'
     });
     loading(false);
-    const id=Array.isArray(result)?result[0]?.id:result?.id;
-    await abrirVerificar(id);
-  }catch(e){loading(false);showAlert('nuevo','Error: '+e.message,'err');}
+    // Usamos los datos del POST + los nombres de finca/cosechero que ya tenemos
+    const created=Array.isArray(result)?result[0]:result;
+    albaranActual={
+      ...created,
+      finca_nombre: finca?.nombre||'—',
+      cosechero_nombre: cos?.nombre||'—',
+      cosechero_email: cos?.email||''
+    };
+    checksOk=0;
+    document.querySelectorAll('.check-item').forEach(el=>{el.querySelector('input').checked=false;el.classList.remove('done');});
+    actualizarBoton();
+    renderVerificar();
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-verificar').classList.add('active');
+  }catch(e){loading(false);showAlert('nuevo','Error al guardar: '+e.message,'err');}
 }
 
 // VERIFICAR
