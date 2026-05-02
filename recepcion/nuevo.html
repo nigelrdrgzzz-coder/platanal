@@ -168,6 +168,7 @@
   <script src="../assets/js/auth.js"></script>
   <script src="../assets/js/utils.js"></script>
   <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/api.js"></script>
   <script>
     let fincas = [], cosecheros = [];
 
@@ -177,10 +178,7 @@
       document.getElementById('fecha').value = hoy.toISOString().split('T')[0];
       document.getElementById('semana').value = Math.ceil((hoy - new Date(hoy.getFullYear(),0,1))/604800000);
       showLoading(true);
-      const [{ data: f }, { data: c }] = await Promise.all([
-        sb.from('fincas').select('*').eq('activa', true).order('nombre'),
-        sb.from('cosecheros').select('*').eq('activo', true).order('nombre')
-      ]);
+      const [f, c] = await Promise.all([getFincas(), getCosecheros()]);
       fincas = f||[]; cosecheros = c||[];
       fincas.forEach(f => document.getElementById('finca_id').innerHTML += `<option value="${f.id}">${f.nombre}</option>`);
       showLoading(false);
@@ -248,7 +246,7 @@
       showLoading(true);
       const totalKg = getN('kg_extra')+getN('kg_mercadona')+getN('kg_primera')+getN('kg_segunda')+getN('kg_desecho')+getN('kg_dedos');
       const racimos = getI('racimos');
-      const { data, error } = await sb.from('albaranes_entrada').insert({
+      const data = await crearAlbaran({
         numero: 'ALB-' + Date.now(),
         fecha: document.getElementById('fecha').value,
         semana: getI('semana'),
@@ -263,10 +261,10 @@
         kg_total: totalKg, peso_medio: racimos > 0 ? totalKg/racimos : 0,
         observaciones: document.getElementById('observaciones').value,
         estado: 'confirmado'
-      }).select().single();
+      });
       showLoading(false);
-      if (error) { showAlert('Error: ' + error.message, 'error'); return; }
-      window.location.href = `verificar.html?id=${data.id}`;
+      const id = Array.isArray(data) ? data[0]?.id : data?.id;
+      window.location.href = `verificar.html?id=${id}`;
     }
 
     init();

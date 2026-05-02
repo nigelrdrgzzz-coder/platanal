@@ -171,6 +171,11 @@
   <script src="../assets/js/auth.js"></script>
   <script src="../assets/js/utils.js"></script>
   <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script>
+    // alias para evitar conflicto con nombre de función local
+    async function enviarAlbaran_api(id) { return enviarAlbaran(id); }
+  </script>
   <script>
     const params = new URLSearchParams(window.location.search);
     const albaranId = params.get('id');
@@ -305,10 +310,16 @@
     async function enviarAlbaran() {
       if (checksCompletados < 6) return;
       showLoading(true);
-      await sb.from('albaranes_entrada').update({ estado: 'inspeccionado' }).eq('id', albaranId);
-      showLoading(false);
-      showAlert('✅ Albarán verificado y enviado al cosechero', 'success');
-      setTimeout(() => window.location.href = 'index.html', 2000);
+      try {
+        await enviarAlbaran_api(albaranId);
+        await sb.from('albaranes_entrada').update({ estado: 'inspeccionado' }).eq('id', albaranId);
+        showLoading(false);
+        showAlert('✅ Albarán enviado al cosechero por email', 'success');
+        setTimeout(() => window.location.href = 'index.html', 2000);
+      } catch(e) {
+        showLoading(false);
+        showAlert('Error al enviar: ' + e.message, 'error');
+      }
     }
 
     init();
