@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recepción — Platanal</title>
+  <style>
+    :root { --verde:#1B4332;--amarillo:#F9C74F;--gris:#F4F6F8;--gris2:#E8ECF0;--texto:#1A1D23;--subtexto:#6B7280;--rojo:#EF4444;--verde-ok:#10B981;--naranja:#F59E0B; }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--gris);color:var(--texto);}
+    nav{background:var(--verde);height:60px;display:flex;align-items:center;padding:0 28px;gap:20px;position:sticky;top:0;z-index:100;}
+    nav .logo{color:var(--amarillo);font-size:18px;font-weight:800;text-decoration:none;}
+    nav span{color:rgba(255,255,255,0.5);font-size:13px;margin-left:auto;}
+    .container{max-width:1100px;margin:0 auto;padding:28px 20px;}
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+    .page-header h1{font-size:22px;font-weight:700;}
+    .card{background:white;border-radius:12px;border:1px solid var(--gris2);margin-bottom:16px;overflow:hidden;}
+    .card-header{padding:16px 20px;border-bottom:1px solid var(--gris2);display:flex;align-items:center;justify-content:space-between;}
+    .card-header h3{font-size:14px;font-weight:700;}
+    .card-body{padding:20px;}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:inherit;text-decoration:none;transition:opacity 0.15s;}
+    .btn:hover{opacity:0.88;}
+    .btn-primary{background:var(--verde);color:white;}
+    .btn-secondary{background:var(--gris2);color:var(--texto);}
+    .btn-success{background:var(--verde-ok);color:white;font-size:15px;padding:13px 28px;}
+    .btn-success:disabled{opacity:0.4;cursor:not-allowed;}
+    .btn-sm{padding:5px 12px;font-size:12px;}
+    .form-group{margin-bottom:14px;}
+    label{display:block;font-size:12px;font-weight:600;margin-bottom:5px;color:#374151;}
+    input,select,textarea{width:100%;padding:9px 12px;border:1.5px solid var(--gris2);border-radius:8px;font-size:14px;font-family:inherit;transition:border-color 0.15s;}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--verde);box-shadow:0 0 0 3px rgba(27,67,50,0.08);}
+    textarea{resize:vertical;min-height:70px;}
+    .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;}
+    .marca-item{background:white;border-radius:12px;border:1px solid var(--gris2);padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;gap:16px;transition:box-shadow 0.15s;}
+    .marca-item.pendiente{border-left:4px solid var(--naranja);}
+    .marca-item.verificada{border-left:4px solid var(--verde-ok);}
+    .marca-num{font-size:16px;font-weight:800;color:var(--verde);min-width:110px;}
+    .marca-info{flex:1;}
+    .marca-info strong{font-size:14px;display:block;}
+    .marca-info span{font-size:12px;color:var(--subtexto);}
+    .marca-kg{text-align:right;min-width:90px;}
+    .marca-kg strong{font-size:15px;display:block;}
+    .marca-actions{display:flex;gap:8px;}
+    .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+    .badge-ok{background:#D1FAE5;color:#065F46;}
+    .badge-pend{background:#FEF3C7;color:#92400E;}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+    @media(max-width:768px){.grid-2{grid-template-columns:1fr;}}
+    .kg-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;align-items:center;margin-bottom:8px;}
+    .kg-header{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:6px;}
+    .kg-header span{font-size:11px;font-weight:700;color:var(--subtexto);text-transform:uppercase;}
+    .kg-label{font-size:13px;font-weight:600;}
+    .total-bar{background:var(--verde);color:white;border-radius:8px;padding:13px 18px;display:flex;justify-content:space-between;margin-top:12px;}
+    .total-bar strong{font-size:18px;}
+    .albaran{border:2px solid var(--verde);border-radius:10px;padding:20px;font-size:13px;}
+    .albaran-top{text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:14px;}
+    .albaran-top h2{font-size:14px;font-weight:700;}
+    .albaran-top p{font-size:11px;color:#555;}
+    .albaran-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;font-size:12px;}
+    .albaran-meta strong{color:var(--verde);}
+    .albaran-proveedor{background:#f0f7f4;padding:8px 10px;border-radius:6px;margin-bottom:10px;font-size:12px;}
+    .albaran-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px;}
+    .albaran-table th{background:#f5f5f5;padding:5px 8px;text-align:left;border:1px solid #ddd;font-weight:600;}
+    .albaran-table td{padding:5px 8px;border:1px solid #ddd;text-align:right;}
+    .albaran-table td:first-child{text-align:left;}
+    .albaran-table .total td{font-weight:700;background:#f9f9f9;}
+    .check-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gris2);cursor:pointer;}
+    .check-item:last-child{border-bottom:none;}
+    .check-item input{width:18px;height:18px;accent-color:var(--verde);cursor:pointer;flex-shrink:0;}
+    .check-item label{font-size:13px;cursor:pointer;flex:1;}
+    .check-item.done label{color:var(--verde-ok);}
+    #loading{position:fixed;inset:0;background:rgba(255,255,255,0.85);display:none;align-items:center;justify-content:center;z-index:999;}
+    .spinner{width:40px;height:40px;border:4px solid var(--gris2);border-top-color:var(--verde);border-radius:50%;animation:spin 0.7s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .alert{padding:12px 16px;border-radius:8px;margin-bottom:14px;font-size:13px;font-weight:500;display:none;}
+    .alert-ok{background:#D1FAE5;color:#065F46;border:1px solid #A7F3D0;}
+    .alert-err{background:#FEE2E2;color:#991B1B;border:1px solid #FECACA;}
+    .send-panel{position:sticky;bottom:20px;background:white;border:2px solid var(--gris2);border-radius:12px;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 8px 24px rgba(0,0,0,0.1);}
+    .send-panel-info strong{font-size:15px;display:block;}
+    .send-panel-info span{font-size:13px;color:var(--subtexto);}
+    .filtros{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+    .filtro-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--gris2);background:white;cursor:pointer;color:var(--subtexto);font-family:inherit;}
+    .filtro-btn.active{background:var(--verde);color:white;border-color:var(--verde);}
+    .view{display:none;}
+    .view.active{display:block;}
+    .empty{text-align:center;padding:50px;color:var(--subtexto);font-size:14px;}
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">🍌 Platanal</a>
+  <span>Almacén de Plátanos</span>
+</nav>
+
+<div id="loading"><div class="spinner"></div></div>
+
+<!-- LISTA -->
+<div class="view active" id="view-lista">
+  <div class="container">
+    <div class="page-header">
+      <h1>Recepción de Fruta</h1>
+      <button class="btn btn-primary" onclick="showView('nuevo')">+ Nueva recepción</button>
+    </div>
+    <div id="alert-lista" class="alert"></div>
+    <div class="filtros">
+      <button class="filtro-btn active" onclick="filtrar('todos',this)">Todos</button>
+      <button class="filtro-btn" onclick="filtrar('confirmado',this)">⏳ Pendientes</button>
+      <button class="filtro-btn" onclick="filtrar('inspeccionado',this)">✅ Verificados</button>
+    </div>
+    <div id="lista-marcas"><div class="empty">Cargando...</div></div>
+  </div>
+</div>
+
+<!-- NUEVO -->
+<div class="view" id="view-nuevo">
+  <div class="container">
+    <div class="page-header">
+      <h1>Nueva Recepción</h1>
+      <button class="btn btn-secondary" onclick="showView('lista')">← Volver</button>
+    </div>
+    <div id="alert-nuevo" class="alert"></div>
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <div class="card-header"><h3>Datos de la entrega</h3></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group"><label>Fecha *</label><input type="date" id="n-fecha"></div>
+              <div class="form-group"><label>Semana</label><input type="number" id="n-semana" min="1" max="53"></div>
+            </div>
+            <div class="form-group"><label>Finca *</label><select id="n-finca" onchange="onFincaChange()"><option value="">— Cargando... —</option></select></div>
+            <div class="form-group"><label>Cosechero *</label><select id="n-cosechero"><option value="">— Selecciona finca primero —</option></select></div>
+            <div class="form-group"><label>Nº de racimos *</label><input type="number" id="n-racimos" min="0" placeholder="0" oninput="calcular()"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Calidades recibidas</h3></div>
+          <div class="card-body">
+            <div class="kg-header"><span>Calidad</span><span>Cajas</span><span>Kg</span></div>
+            <div class="kg-row"><span class="kg-label">Extra (10 kg)</span><input type="number" id="n-cajas-extra" min="0" placeholder="0" oninput="calcKg('extra',10)"><input type="number" id="n-kg-extra" min="0" placeholder="0" oninput="calcular()"></div>
+            <div class="kg-row"><span class="kg-label">Mercadona (16-17 kg)</span><input type="number" id="n-cajas-mercadona" min="0" placeholder="0" oninput="calcKg('mercadona',16.5)"><input type="number" id="n-kg-mercadona" min="0" placeholder="0" oninput="calcular()"></div>
+            <div class="kg-row"><span class="kg-label">Primera (18 kg)</span><input type="number" id="n-cajas-primera" min="0" placeholder="0" oninput="calcKg('primera',18)"><input type="number" id="n-kg-primera" min="0" placeholder="0" oninput="calcular()"></div>
+            <div class="kg-row"><span class="kg-label">Segunda (10 kg)</span><input type="number" id="n-cajas-segunda" min="0" placeholder="0" oninput="calcKg('segunda',10)"><input type="number" id="n-kg-segunda" min="0" placeholder="0" oninput="calcular()"></div>
+            <div class="kg-row"><span class="kg-label">Desecho</span><span></span><input type="number" id="n-kg-desecho" min="0" placeholder="0" oninput="calcular()"></div>
+            <div class="kg-row"><span class="kg-label">Dedos</span><span></span><input type="number" id="n-kg-dedos" min="0" placeholder="0" oninput="calcular()"></div>
+            <div class="total-bar"><span>TOTAL</span><strong id="n-total-cajas">0 cajas</strong><strong id="n-total-kg">0 kg</strong></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Observaciones</h3></div>
+          <div class="card-body"><textarea id="n-obs" placeholder="Notas adicionales..."></textarea></div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;font-size:15px" onclick="guardarAlbaran()">Guardar y verificar →</button>
+      </div>
+      <div>
+        <div class="card" style="position:sticky;top:70px">
+          <div class="card-header"><h3>📄 Vista previa del albarán</h3></div>
+          <div class="card-body">
+            <div class="albaran">
+              <div class="albaran-top"><h2>AGRÍCOLA LLANOS DE SARDINA, S.C.C.</h2><p>Cruz de Pineda, Carretera Cruz de Pineda 3, 35414 Arucas</p></div>
+              <div class="albaran-meta">
+                <div><strong>Entrega Nº:</strong> —</div>
+                <div><strong>Emitida:</strong> <span id="p-fecha">—</span></div>
+                <div><strong>Semana:</strong> <span id="p-semana">—</span></div>
+                <div><strong>Racimos:</strong> <span id="p-racimos">—</span></div>
+              </div>
+              <div class="albaran-proveedor"><strong>Finca:</strong> <span id="p-finca">—</span><br><strong>Cosechero:</strong> <span id="p-cosechero">—</span></div>
+              <table class="albaran-table">
+                <thead><tr><th>Calidad</th><th>Cajas</th><th>Kilos</th><th>%</th></tr></thead>
+                <tbody id="p-lineas"><tr><td colspan="4" style="text-align:center;color:#aaa;padding:12px">Rellena el formulario...</td></tr></tbody>
+              </table>
+              <div style="font-size:12px"><strong>Peso Medio:</strong> <span id="p-peso">—</span> kg</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VERIFICAR -->
+<div class="view" id="view-verificar">
+  <div class="container">
+    <div class="page-header">
+      <h1>Verificar Albarán</h1>
+      <button class="btn btn-secondary" onclick="showView('lista')">← Volver</button>
+    </div>
+    <div id="alert-verificar" class="alert"></div>
+    <div id="v-info" style="background:var(--verde);border-radius:12px;padding:18px 22px;color:white;margin-bottom:20px"></div>
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <div class="card-header"><h3>✅ Lista de verificación</h3></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--subtexto);margin-bottom:14px">El albarán solo se envía cuando todo esté confirmado.</p>
+            <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Los kg totales coinciden con el albarán en papel</label></div>
+            <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Las categorías y cajas están correctas</label></div>
+            <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>El número de racimos es correcto</label></div>
+            <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>Las cajas anotadas a mano están incluidas</label></div>
+            <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>La finca y el cosechero son correctos</label></div>
+            <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><label>El email del cosechero está registrado</label></div>
+            <div id="check-estado" style="text-align:center;font-size:13px;color:var(--subtexto);padding:10px 0">0 de 6 puntos verificados</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>✏️ Correcciones</h3></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group"><label>Kg Extra</label><input type="number" id="v-kg-extra" min="0"></div>
+              <div class="form-group"><label>Kg Mercadona</label><input type="number" id="v-kg-mercadona" min="0"></div>
+              <div class="form-group"><label>Kg Primera</label><input type="number" id="v-kg-primera" min="0"></div>
+              <div class="form-group"><label>Kg Segunda</label><input type="number" id="v-kg-segunda" min="0"></div>
+              <div class="form-group"><label>Kg Desecho</label><input type="number" id="v-kg-desecho" min="0"></div>
+              <div class="form-group"><label>Kg Dedos</label><input type="number" id="v-kg-dedos" min="0"></div>
+            </div>
+            <button class="btn btn-secondary" onclick="guardarCorrecciones()">Guardar correcciones</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="position:sticky;top:70px">
+          <div class="card-header"><h3>📄 Albarán a enviar</h3></div>
+          <div class="card-body"><div class="albaran" id="v-preview"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="send-panel">
+      <div class="send-panel-info">
+        <strong id="send-titulo">Pendiente de verificación</strong>
+        <span id="send-sub">Completa los 6 puntos para poder enviar</span>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-secondary" onclick="showView('lista')">Cancelar</button>
+        <button class="btn btn-success" id="btn-enviar" onclick="enviarAlbaran()" disabled>✉️ Enviar al cosechero</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const N8N = 'https://n8n-n8n.cvqmib.easypanel.host/webhook';
+let fincas=[], cosecheros=[], albaranes=[], albaranActual=null, checksOk=0;
+
+function loading(show){document.getElementById('loading').style.display=show?'flex':'none';}
+function getN(id){return parseFloat(document.getElementById(id)?.value)||0;}
+function getI(id){return parseInt(document.getElementById(id)?.value)||0;}
+function fmtDate(d){if(!d)return'—';return new Date(d+'T12:00:00').toLocaleDateString('es-ES');}
+function showAlert(v,msg,type='ok'){const el=document.getElementById('alert-'+v);el.className='alert alert-'+type;el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',4000);}
+
+async function apiGet(path){
+  const r=await fetch(`${N8N}/${path}`);
+  if(!r.ok)throw new Error('Error '+r.status);
+  return r.json();
+}
+async function apiPost(path,data){
+  const r=await fetch(`${N8N}/${path}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  if(!r.ok)throw new Error('Error '+r.status);
+  return r.json();
+}
+
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  if(name==='lista')cargarLista();
+  if(name==='nuevo')initNuevo();
+}
+
+// LISTA
+let filtroActivo='todos';
+async function cargarLista(){
+  loading(true);
+  try{albaranes=await apiGet('platanal/albaranes')||[];}catch(e){albaranes=[];}
+  loading(false);
+  renderLista(albaranes);
+}
+
+function filtrar(estado,btn){
+  filtroActivo=estado;
+  document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLista(estado==='todos'?albaranes:albaranes.filter(a=>a.estado===estado));
+}
+
+function renderLista(lista){
+  const el=document.getElementById('lista-marcas');
+  if(!lista.length){el.innerHTML='<div class="empty">📭 Sin albaranes registrados</div>';return;}
+  el.innerHTML=lista.map(a=>`
+    <div class="marca-item ${a.estado==='confirmado'?'pendiente':'verificada'}">
+      <div class="marca-num">${a.numero}</div>
+      <div class="marca-info">
+        <strong>${a.finca_nombre||'—'}</strong>
+        <span>${a.cosechero_nombre||'—'} · ${fmtDate(a.fecha)} · Sem.${a.semana||'—'} · ${a.racimos||0} racimos</span>
+      </div>
+      <div class="marca-kg"><strong>${Number(a.kg_total||0).toLocaleString('es-ES')} kg</strong></div>
+      <div class="marca-actions">
+        ${a.estado==='confirmado'
+          ?`<button class="btn btn-sm btn-primary" onclick="abrirVerificar('${a.id}')">✓ Verificar</button>`
+          :`<span class="badge badge-ok">✓ Enviado</span>`}
+      </div>
+    </div>`).join('');
+}
+
+// NUEVO
+async function initNuevo(){
+  const hoy=new Date();
+  document.getElementById('n-fecha').value=hoy.toISOString().split('T')[0];
+  document.getElementById('n-semana').value=Math.ceil((hoy-new Date(hoy.getFullYear(),0,1))/604800000);
+  if(!fincas.length){
+    loading(true);
+    try{[fincas,cosecheros]=await Promise.all([apiGet('platanal/fincas'),apiGet('platanal/cosecheros')]);}catch(e){console.error(e);}
+    loading(false);
+  }
+  const sel=document.getElementById('n-finca');
+  sel.innerHTML='<option value="">— Selecciona finca —</option>';
+  (fincas||[]).forEach(f=>sel.innerHTML+=`<option value="${f.id}">${f.nombre}</option>`);
+  calcular();
+}
+
+function onFincaChange(){
+  const fincaId=document.getElementById('n-finca').value;
+  const sel=document.getElementById('n-cosechero');
+  sel.innerHTML='<option value="">— Selecciona cosechero —</option>';
+  const filtrados=fincaId?(cosecheros||[]).filter(c=>c.finca_id===fincaId):(cosecheros||[]);
+  filtrados.forEach(c=>sel.innerHTML+=`<option value="${c.id}">${c.nombre}</option>`);
+  if(filtrados.length===1)sel.value=filtrados[0].id;
+  calcular();
+}
+
+function calcKg(cat,kgCaja){
+  document.getElementById(`n-kg-${cat}`).value=Math.round(getI(`n-cajas-${cat}`)*kgCaja);
+  calcular();
+}
+
+function calcular(){
+  const tc=getI('n-cajas-extra')+getI('n-cajas-mercadona')+getI('n-cajas-primera')+getI('n-cajas-segunda');
+  const tk=getN('n-kg-extra')+getN('n-kg-mercadona')+getN('n-kg-primera')+getN('n-kg-segunda')+getN('n-kg-desecho')+getN('n-kg-dedos');
+  document.getElementById('n-total-cajas').textContent=tc+' cajas';
+  document.getElementById('n-total-kg').textContent=tk.toLocaleString('es-ES')+' kg';
+  const fecha=document.getElementById('n-fecha').value;
+  const racimos=getI('n-racimos');
+  document.getElementById('p-fecha').textContent=fecha?fmtDate(fecha):'—';
+  document.getElementById('p-semana').textContent=document.getElementById('n-semana').value||'—';
+  document.getElementById('p-racimos').textContent=racimos||'—';
+  document.getElementById('p-peso').textContent=racimos>0?(tk/racimos).toFixed(3):'—';
+  const finca=(fincas||[]).find(f=>f.id===document.getElementById('n-finca').value);
+  const cos=(cosecheros||[]).find(c=>c.id===document.getElementById('n-cosechero').value);
+  document.getElementById('p-finca').textContent=finca?.nombre||'—';
+  document.getElementById('p-cosechero').textContent=cos?.nombre||'—';
+  const lineas=[
+    {cal:'Extra (10 kg)',cajas:getI('n-cajas-extra'),kg:getN('n-kg-extra')},
+    {cal:'Mercadona (16-17 kg)',cajas:getI('n-cajas-mercadona'),kg:getN('n-kg-mercadona')},
+    {cal:'Primera (18 kg)',cajas:getI('n-cajas-primera'),kg:getN('n-kg-primera')},
+    {cal:'Segunda (10 kg)',cajas:getI('n-cajas-segunda'),kg:getN('n-kg-segunda')},
+    {cal:'Desecho',cajas:'—',kg:getN('n-kg-desecho')},
+    {cal:'Dedos',cajas:'—',kg:getN('n-kg-dedos')},
+  ].filter(l=>l.kg>0);
+  document.getElementById('p-lineas').innerHTML=lineas.length
+    ?lineas.map(l=>`<tr><td>${l.cal}</td><td>${l.cajas}</td><td>${Number(l.kg).toLocaleString('es-ES')}</td><td>${tk>0?((l.kg/tk)*100).toFixed(1):0}%</td></tr>`).join('')
+      +`<tr class="total"><td>TOTAL</td><td>${tc}</td><td>${tk.toLocaleString('es-ES')}</td><td>100%</td></tr>`
+    :'<tr><td colspan="4" style="text-align:center;color:#aaa;padding:10px">Rellena el formulario...</td></tr>';
+}
+
+async function guardarAlbaran(){
+  if(!document.getElementById('n-finca').value||!document.getElementById('n-cosechero').value||!document.getElementById('n-fecha').value||!getI('n-racimos')){
+    showAlert('nuevo','Rellena finca, cosechero, fecha y racimos','err');return;
+  }
+  loading(true);
+  try{
+    const tk=getN('n-kg-extra')+getN('n-kg-mercadona')+getN('n-kg-primera')+getN('n-kg-segunda')+getN('n-kg-desecho')+getN('n-kg-dedos');
+    const racimos=getI('n-racimos');
+    const result=await apiPost('platanal/albaran',{
+      numero:'ALB-'+Date.now(),
+      fecha:document.getElementById('n-fecha').value,
+      semana:getI('n-semana'),
+      finca_id:document.getElementById('n-finca').value,
+      cosechero_id:document.getElementById('n-cosechero').value,
+      racimos,
+      cajas_extra:getI('n-cajas-extra'),kg_extra:getN('n-kg-extra'),
+      cajas_mercadona:getI('n-cajas-mercadona'),kg_mercadona:getN('n-kg-mercadona'),
+      cajas_primera:getI('n-cajas-primera'),kg_primera:getN('n-kg-primera'),
+      cajas_segunda:getI('n-cajas-segunda'),kg_segunda:getN('n-kg-segunda'),
+      kg_desecho:getN('n-kg-desecho'),kg_dedos:getN('n-kg-dedos'),
+      kg_total:tk,peso_medio:racimos>0?tk/racimos:0,
+      observaciones:document.getElementById('n-obs').value,
+      estado:'confirmado'
+    });
+    loading(false);
+    const id=Array.isArray(result)?result[0]?.id:result?.id;
+    await abrirVerificar(id);
+  }catch(e){loading(false);showAlert('nuevo','Error: '+e.message,'err');}
+}
+
+// VERIFICAR
+async function abrirVerificar(id){
+  loading(true);
+  try{
+    const data=await apiGet('platanal/albaran/'+id);
+    albaranActual=Array.isArray(data)?data[0]:data;
+    loading(false);
+    checksOk=0;
+    document.querySelectorAll('.check-item').forEach(el=>{el.querySelector('input').checked=false;el.classList.remove('done');});
+    actualizarBoton();
+    renderVerificar();
+    showView('verificar');
+  }catch(e){loading(false);showAlert('lista','Error al cargar albarán','err');}
+}
+
+function renderVerificar(){
+  const a=albaranActual;if(!a)return;
+  document.getElementById('v-info').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px">
+      <div><div style="font-size:10px;opacity:0.6;text-transform:uppercase;font-weight:700">Albarán</div><div style="font-size:17px;font-weight:800">${a.numero}</div></div>
+      <div><div style="font-size:10px;opacity:0.6;text-transform:uppercase;font-weight:700">Finca</div><div style="font-size:15px;font-weight:700">${a.finca_nombre||'—'}</div></div>
+      <div><div style="font-size:10px;opacity:0.6;text-transform:uppercase;font-weight:700">Cosechero</div><div style="font-size:15px;font-weight:700">${a.cosechero_nombre||'—'}</div></div>
+      <div><div style="font-size:10px;opacity:0.6;text-transform:uppercase;font-weight:700">Email</div><div style="font-size:12px">${a.cosechero_email||'⚠ Sin email'}</div></div>
+      <div><div style="font-size:10px;opacity:0.6;text-transform:uppercase;font-weight:700">Kg total</div><div style="font-size:17px;font-weight:800">${Number(a.kg_total||0).toLocaleString('es-ES')} kg</div></div>
+      <div><div style="font-size:10px;opacity:0.6;text-transform:uppercase;font-weight:700">Racimos</div><div style="font-size:17px;font-weight:800">${a.racimos||'—'}</div></div>
+    </div>`;
+  ['extra','mercadona','primera','segunda','desecho','dedos'].forEach(c=>{
+    const el=document.getElementById('v-kg-'+c);if(el)el.value=a['kg_'+c]||0;
+  });
+  renderPreviewV();
+}
+
+function renderPreviewV(){
+  const a=albaranActual;if(!a)return;
+  const tk=(a.kg_extra||0)+(a.kg_mercadona||0)+(a.kg_primera||0)+(a.kg_segunda||0)+(a.kg_desecho||0)+(a.kg_dedos||0);
+  const tc=(a.cajas_extra||0)+(a.cajas_mercadona||0)+(a.cajas_primera||0)+(a.cajas_segunda||0);
+  const lineas=[
+    {cal:'Extra (10 kg)',cajas:a.cajas_extra||0,kg:a.kg_extra||0},
+    {cal:'Mercadona (16-17 kg)',cajas:a.cajas_mercadona||0,kg:a.kg_mercadona||0},
+    {cal:'Primera (18 kg)',cajas:a.cajas_primera||0,kg:a.kg_primera||0},
+    {cal:'Segunda (10 kg)',cajas:a.cajas_segunda||0,kg:a.kg_segunda||0},
+    {cal:'Desecho',cajas:'—',kg:a.kg_desecho||0},
+    {cal:'Dedos',cajas:'—',kg:a.kg_dedos||0},
+  ].filter(l=>l.kg>0);
+  document.getElementById('v-preview').innerHTML=`
+    <div class="albaran-top"><h2>AGRÍCOLA LLANOS DE SARDINA, S.C.C.</h2><p>Cruz de Pineda, Carretera Cruz de Pineda 3, 35414 Arucas</p></div>
+    <div class="albaran-meta">
+      <div><strong>Entrega Nº:</strong> ${a.numero}</div><div><strong>Emitida:</strong> ${fmtDate(a.fecha)}</div>
+      <div><strong>Semana:</strong> ${a.semana||'—'}</div><div><strong>Racimos:</strong> ${a.racimos||'—'}</div>
+    </div>
+    <div class="albaran-proveedor"><strong>Finca:</strong> ${a.finca_nombre||'—'} &nbsp;&nbsp; <strong>Cosechero:</strong> ${a.cosechero_nombre||'—'}</div>
+    <table class="albaran-table">
+      <thead><tr><th>Calidad</th><th>Cajas</th><th>Kilos</th><th>%</th></tr></thead>
+      <tbody>${lineas.map(l=>`<tr><td>${l.cal}</td><td>${l.cajas}</td><td>${Number(l.kg).toLocaleString('es-ES')}</td><td>${tk>0?((l.kg/tk)*100).toFixed(2):0}%</td></tr>`).join('')}
+      <tr class="total"><td>TOTAL</td><td>${tc}</td><td>${tk.toLocaleString('es-ES')}</td><td>100%</td></tr></tbody>
+    </table>
+    <div style="font-size:12px"><strong>Peso Medio: ${a.peso_medio?Number(a.peso_medio).toFixed(3):'—'} kg</strong></div>`;
+}
+
+function toggleCheck(item){
+  const cb=item.querySelector('input');cb.checked=!cb.checked;item.classList.toggle('done',cb.checked);
+  checksOk=document.querySelectorAll('.check-item input:checked').length;
+  document.getElementById('check-estado').textContent=`${checksOk} de 6 puntos verificados`;
+  actualizarBoton();
+}
+
+function actualizarBoton(){
+  const btn=document.getElementById('btn-enviar');
+  if(checksOk===6){
+    btn.disabled=false;
+    document.getElementById('send-titulo').textContent='✅ Todo verificado — listo para enviar';
+    document.getElementById('send-sub').textContent='Se enviará el PDF al cosechero por email';
+  }else{
+    btn.disabled=true;
+    document.getElementById('send-titulo').textContent='Pendiente de verificación';
+    document.getElementById('send-sub').textContent=`Faltan ${6-checksOk} puntos por confirmar`;
+  }
+}
+
+async function guardarCorrecciones(){
+  if(!albaranActual)return;
+  loading(true);
+  try{
+    const kg_extra=getN('v-kg-extra'),kg_mercadona=getN('v-kg-mercadona'),kg_primera=getN('v-kg-primera');
+    const kg_segunda=getN('v-kg-segunda'),kg_desecho=getN('v-kg-desecho'),kg_dedos=getN('v-kg-dedos');
+    const kg_total=kg_extra+kg_mercadona+kg_primera+kg_segunda+kg_desecho+kg_dedos;
+    await apiPost('platanal/actualizar-albaran',{id:albaranActual.id,kg_extra,kg_mercadona,kg_primera,kg_segunda,kg_desecho,kg_dedos,kg_total,peso_medio:albaranActual.racimos>0?kg_total/albaranActual.racimos:0});
+    Object.assign(albaranActual,{kg_extra,kg_mercadona,kg_primera,kg_segunda,kg_desecho,kg_dedos,kg_total});
+    renderPreviewV();loading(false);showAlert('verificar','Correcciones guardadas');
+  }catch(e){loading(false);showAlert('verificar','Error: '+e.message,'err');}
+}
+
+async function enviarAlbaran(){
+  if(checksOk<6||!albaranActual)return;
+  loading(true);
+  try{
+    await apiPost('platanal/enviar-albaran',{id:albaranActual.id});
+    loading(false);
+    showAlert('verificar','✅ Albarán enviado al cosechero por email');
+    setTimeout(()=>showView('lista'),2500);
+  }catch(e){loading(false);showAlert('verificar','Error al enviar: '+e.message,'err');}
+}
+
+cargarLista();
+</script>
+</body>
+</html>
