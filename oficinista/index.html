@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Platanal — Oficinista</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --verde: #1B4332; --verde2: #2D6A4F;
+      --fondo: #F4F6F8; --card: #FFFFFF; --texto: #1A1D23;
+      --sub: #6B7280; --borde: #E8ECF0; --rojo: #EF4444;
+      --azul: #3B82F6;
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--fondo); color: var(--texto); min-height: 100vh; }
+
+    /* ── PIN ── */
+    #screen-pin { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .pin-box { background: var(--card); border-radius: 20px; padding: 40px 32px; max-width: 340px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.08); text-align: center; }
+    .pin-logo { font-size: 40px; margin-bottom: 12px; }
+    .pin-box h1 { font-size: 24px; font-weight: 800; color: var(--verde); margin-bottom: 4px; }
+    .pin-box > p { color: var(--sub); font-size: 14px; margin-bottom: 32px; }
+    .pin-dots { display: flex; gap: 14px; justify-content: center; margin-bottom: 28px; }
+    .pin-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--borde); background: transparent; transition: all 0.15s; }
+    .pin-dot.filled { background: var(--verde); border-color: var(--verde); }
+    .pin-dot.error { background: var(--rojo); border-color: var(--rojo); }
+    .pin-numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+    .pin-key { height: 60px; border-radius: 12px; border: none; background: var(--fondo); font-size: 22px; font-weight: 600; color: var(--texto); cursor: pointer; transition: background 0.1s; -webkit-tap-highlight-color: transparent; }
+    .pin-key:active { background: var(--borde); }
+    .pin-key.delete { font-size: 18px; }
+    .pin-key.empty { background: transparent; cursor: default; pointer-events: none; }
+    .pin-error { color: var(--rojo); font-size: 13px; min-height: 20px; }
+
+    /* ── DASHBOARD ── */
+    #screen-dashboard { display: none; max-width: 600px; margin: 0 auto; padding: 16px; }
+    .dash-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 20px; border-bottom: 1px solid var(--borde); margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    .dash-header h1 { font-size: 20px; font-weight: 800; color: var(--verde); }
+    .dash-header-sub { font-size: 12px; color: var(--sub); margin-top: 2px; }
+    .dash-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+    .badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-pend { background: #FEF3C7; color: #92400E; }
+    .badge-env { background: #D1FAE5; color: #065F46; }
+
+    /* Card */
+    .albaran-card { background: var(--card); border-radius: 14px; margin-bottom: 12px; border: 1px solid var(--borde); overflow: hidden; }
+    .albaran-card.pendiente { border-color: #A7F3D0; }
+    .card-header-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .card-finca { font-size: 15px; font-weight: 700; }
+    .card-cosechero { font-size: 12px; color: var(--sub); margin-top: 2px; }
+    .card-badge-pend { background: #FEF3C7; color: #92400E; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+    .card-badge-env { background: #D1FAE5; color: #065F46; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+    .card-body-wrap { padding: 0 16px 16px; }
+
+    /* Grid categorías */
+    .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .cat-cell { background: var(--fondo); border-radius: 10px; padding: 10px 8px; text-align: center; border: 2px solid transparent; transition: border-color 0.15s; }
+    .cat-cell.editada { border-color: #FCA5A5; background: #FEF2F2; }
+    .cat-label { font-size: 10px; color: var(--sub); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .cat-valor { font-size: 22px; font-weight: 800; color: var(--texto); width: 60px; border: none; background: transparent; text-align: center; outline: none; padding: 0; border-bottom: 2px dashed transparent; transition: border-color 0.15s; }
+    .cat-valor:focus { border-bottom-color: var(--azul); }
+    .cat-unit { font-size: 10px; color: var(--sub); margin-top: 2px; }
+
+    /* Total + botones */
+    .total-row { background: var(--fondo); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .total-label { font-size: 13px; color: var(--sub); }
+    .total-valor { font-size: 16px; font-weight: 800; color: var(--verde); }
+    .card-actions { display: flex; gap: 10px; }
+    .btn-enviar { flex: 1; background: var(--verde); color: white; border: none; border-radius: 10px; padding: 14px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.15s; -webkit-tap-highlight-color: transparent; }
+    .btn-enviar:active { background: var(--verde2); }
+    .btn-enviar:disabled { background: var(--borde); color: var(--sub); cursor: not-allowed; }
+    .btn-pendiente { background: #EFF6FF; color: var(--azul); border: none; border-radius: 10px; padding: 14px 18px; font-size: 13px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; line-height: 1.4; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--verde); color: white; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.15); opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; z-index: 1000; }
+    .toast.show { opacity: 1; }
+    .loading-txt { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--sub); font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<!-- PANTALLA PIN -->
+<div id="screen-pin">
+  <div class="pin-box">
+    <div class="pin-logo">🍌</div>
+    <h1>Platanal</h1>
+    <p>Panel del oficinista</p>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+    </div>
+    <div class="pin-numpad">
+      <button class="pin-key" onclick="pinKey('1')">1</button>
+      <button class="pin-key" onclick="pinKey('2')">2</button>
+      <button class="pin-key" onclick="pinKey('3')">3</button>
+      <button class="pin-key" onclick="pinKey('4')">4</button>
+      <button class="pin-key" onclick="pinKey('5')">5</button>
+      <button class="pin-key" onclick="pinKey('6')">6</button>
+      <button class="pin-key" onclick="pinKey('7')">7</button>
+      <button class="pin-key" onclick="pinKey('8')">8</button>
+      <button class="pin-key" onclick="pinKey('9')">9</button>
+      <div class="pin-key empty"></div>
+      <button class="pin-key" onclick="pinKey('0')">0</button>
+      <button class="pin-key delete" onclick="pinDelete()">⌫</button>
+    </div>
+    <p class="pin-error" id="pin-error"></p>
+  </div>
+</div>
+
+<!-- PANTALLA DASHBOARD -->
+<div id="screen-dashboard">
+  <div class="dash-header">
+    <div>
+      <h1>📋 Albaranes</h1>
+      <div class="dash-header-sub" id="dash-sub">Cargando...</div>
+    </div>
+    <div class="dash-badges">
+      <span class="badge badge-pend" id="badge-pend" style="display:none"></span>
+      <span class="badge badge-env" id="badge-env" style="display:none"></span>
+    </div>
+  </div>
+  <div id="albaranes-list">
+    <div class="loading-txt">Cargando albaranes...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const N8N = 'https://n8n-n8n.cvqmib.easypanel.host/webhook';
+const PIN_LS_KEY = 'platanal_pin_token';
+const PIN_TTL = 30 * 24 * 60 * 60 * 1000;
+const KG = { cajas_extra: 10, cajas_mercadona: 16.5, cajas_primera: 18, cajas_segunda: 10, kg_desecho: 1, kg_dedos: 0 };
+const CATS = [
+  { key: 'cajas_extra',     label: 'Extra',     unit: 'cajas' },
+  { key: 'cajas_primera',   label: 'Primera',   unit: 'cajas' },
+  { key: 'cajas_mercadona', label: 'Mercadona', unit: 'cajas' },
+  { key: 'cajas_segunda',   label: 'Segunda',   unit: 'cajas' },
+  { key: 'kg_desecho',      label: 'Desecho',   unit: 'kg'    },
+  { key: 'kg_dedos',        label: 'Dedos',     unit: 'cajas' },
+];
+
+// ── PIN ──
+let pinBuffer = '', pinBloqueado = false, pinIntentos = 0;
+
+function pinKey(d) {
+  if (pinBloqueado || pinBuffer.length >= 4) return;
+  pinBuffer += d;
+  renderDots();
+  if (pinBuffer.length === 4) validarPin();
+}
+
+function pinDelete() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  renderDots();
+  document.getElementById('pin-error').textContent = '';
+}
+
+function renderDots() {
+  document.querySelectorAll('.pin-dot').forEach((dot, i) => {
+    dot.classList.toggle('filled', i < pinBuffer.length);
+    dot.classList.remove('error');
+  });
+}
+
+async function validarPin() {
+  try {
+    const r = await fetch(`${N8N}/platanal/validar-pin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: pinBuffer })
+    });
+    const data = await r.json();
+    if (data.ok) {
+      localStorage.setItem(PIN_LS_KEY, JSON.stringify({ expires: Date.now() + PIN_TTL }));
+      pinIntentos = 0;
+      mostrarDashboard();
+    } else {
+      pinIntentos++;
+      pinBuffer = '';
+      document.querySelectorAll('.pin-dot').forEach(d => { d.classList.remove('filled'); d.classList.add('error'); });
+      if (pinIntentos >= 3) {
+        pinBloqueado = true;
+        document.getElementById('pin-error').textContent = 'Demasiados intentos. Espera 5 minutos.';
+        setTimeout(() => { pinBloqueado = false; pinIntentos = 0; document.getElementById('pin-error').textContent = ''; }, 5 * 60 * 1000);
+      } else {
+        document.getElementById('pin-error').textContent = 'PIN incorrecto';
+        setTimeout(() => document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('error')), 600);
+      }
+    }
+  } catch(e) {
+    pinBuffer = '';
+    document.getElementById('pin-error').textContent = 'Error de conexión. Reintenta.';
+  }
+}
+
+function checkPinGuardado() {
+  try {
+    const s = JSON.parse(localStorage.getItem(PIN_LS_KEY) || 'null');
+    return s && s.expires > Date.now();
+  } catch(e) { return false; }
+}
+
+// ── DASHBOARD ──
+let albaranes = [], expandedId = null, pollingTimer = null;
+
+function mostrarDashboard() {
+  document.getElementById('screen-pin').style.display = 'none';
+  document.getElementById('screen-dashboard').style.display = 'block';
+  cargarAlbaranes();
+  pollingTimer = setInterval(cargarAlbaranes, 30000);
+}
+
+async function cargarAlbaranes() {
+  try {
+    const r = await fetch(`${N8N}/platanal/albaranes`);
+    albaranes = await r.json();
+    renderAlbaranes();
+    actualizarHeader();
+  } catch(e) { console.error('Error cargando albaranes:', e); }
+}
+
+function actualizarHeader() {
+  const ahora = new Date();
+  document.getElementById('dash-sub').textContent =
+    ahora.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }) +
+    ' · actualizado ' + ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const np = albaranes.filter(a => a.estado === 'pendiente').length;
+  const ne = albaranes.filter(a => a.estado === 'enviado').length;
+  const bp = document.getElementById('badge-pend');
+  const be = document.getElementById('badge-env');
+  bp.style.display = np ? 'inline' : 'none';
+  bp.textContent = `${np} pendiente${np !== 1 ? 's' : ''}`;
+  be.style.display = ne ? 'inline' : 'none';
+  be.textContent = `${ne} enviado${ne !== 1 ? 's' : ''}`;
+}
+
+function renderAlbaranes() {
+  const pend = albaranes.filter(a => a.estado === 'pendiente');
+  const env  = albaranes.filter(a => a.estado === 'enviado');
+  if (!pend.length && !env.length) {
+    document.getElementById('albaranes-list').innerHTML = '<div class="loading-txt">Sin albaranes hoy</div>';
+    return;
+  }
+  if (!expandedId && pend.length) expandedId = pend[0].id;
+  document.getElementById('albaranes-list').innerHTML = [...pend, ...env].map(renderCard).join('');
+}
+
+function calcKg(a) {
+  return Object.entries(KG).reduce((sum, [k, kgUnit]) => sum + (a[k] || 0) * kgUnit, 0);
+}
+
+function renderCard(a) {
+  const expanded = a.id === expandedId;
+  const pend = a.estado === 'pendiente';
+  const hora = new Date(a.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const kg = calcKg(a);
+  return `
+<div class="albaran-card ${pend ? 'pendiente' : ''}" id="card-${a.id}">
+  <div class="card-header-row" onclick="toggleCard('${a.id}')">
+    <div>
+      <div class="card-finca">${a.finca_nombre}</div>
+      <div class="card-cosechero">${a.cosechero_nombre} · ${hora}</div>
+    </div>
+    <span class="card-badge-${pend ? 'pend' : 'env'}">${pend ? '● Pendiente' : '✓ Enviado'}</span>
+  </div>
+  ${expanded ? `
+  <div class="card-body-wrap">
+    <div class="cat-grid">
+      ${CATS.map(c => `
+      <div class="cat-cell" id="cell-${a.id}-${c.key}">
+        <div class="cat-label">${c.label}</div>
+        <input class="cat-valor" id="inp-${a.id}-${c.key}" type="number" min="0" inputmode="numeric"
+          value="${a[c.key] || 0}" ${!pend ? 'readonly' : ''}
+          onblur="guardarCampo('${a.id}','${c.key}',this)"
+          onkeydown="if(event.key==='Enter')this.blur()">
+        <div class="cat-unit">${c.unit}</div>
+      </div>`).join('')}
+    </div>
+    <div class="total-row">
+      <span class="total-label">Total estimado</span>
+      <span class="total-valor" id="total-${a.id}">${kg.toLocaleString('es-ES')} kg</span>
+    </div>
+    ${pend ? `
+    <div class="card-actions">
+      <button class="btn-enviar" onclick="enviarAlbaran('${a.id}')">✓ Enviar al cosechero</button>
+      <button class="btn-pendiente" onclick="toggleCard(null)">Dejar<br>pendiente</button>
+    </div>` : ''}
+  </div>` : ''}
+</div>`;
+}
+
+function toggleCard(id) {
+  expandedId = expandedId === id ? null : id;
+  renderAlbaranes();
+}
+
+async function guardarCampo(id, campo, input) {
+  const valor = parseFloat(input.value) || 0;
+  const a = albaranes.find(x => x.id === id);
+  if (!a || a[campo] === valor) return;
+  a[campo] = valor;
+  document.getElementById(`cell-${id}-${campo}`)?.classList.add('editada');
+  const totalEl = document.getElementById(`total-${id}`);
+  if (totalEl) totalEl.textContent = calcKg(a).toLocaleString('es-ES') + ' kg';
+  try {
+    await fetch(`${N8N}/platanal/actualizar-albaran`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, campo, valor })
+    });
+  } catch(e) { console.error('Error guardando campo:', e); }
+}
+
+async function enviarAlbaran(id) {
+  const btn = document.querySelector(`#card-${id} .btn-enviar`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+  try {
+    await fetch(`${N8N}/platanal/enviar-albaran`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const a = albaranes.find(x => x.id === id);
+    if (a) a.estado = 'enviado';
+    expandedId = null;
+    renderAlbaranes();
+    mostrarToast('✓ Albarán enviado al cosechero');
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Enviar al cosechero'; }
+    mostrarToast('Error al enviar. Reintenta.');
+  }
+}
+
+function mostrarToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── INIT ──
+if (checkPinGuardado()) {
+  mostrarDashboard();
+} else {
+  document.getElementById('screen-pin').style.display = 'flex';
+}
+</script>
+</body>
+</html>
